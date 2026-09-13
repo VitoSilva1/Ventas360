@@ -1,0 +1,67 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">V</div>
+      <div><strong>Ventas 360</strong><span>Panel comercial</span></div>
+    </div>
+    <nav class="main-nav" aria-label="Navegación principal">
+      <a class="nav-item active" href="#resumen"><span class="nav-icon">⌂</span>Resumen</a>
+      <a class="nav-item" href="#productos"><span class="nav-icon">▦</span>Productos</a>
+      <a class="nav-item" href="#ventas"><span class="nav-icon">↗</span>Ventas</a>
+    </nav>
+    <div class="sidebar-footer"><div class="status-dot"></div><div><strong>Backend conectado</strong><span>API Gateway · :8080</span></div></div>
+  </aside>
+
+  <main class="content" id="resumen">
+    <header class="topbar">
+      <div><p class="eyebrow">Domingo, 13 de septiembre de 2026</p><h1>Resumen general</h1></div>
+      <button class="avatar" type="button" aria-label="Abrir perfil">VS</button>
+    </header>
+
+    <section class="hero-card">
+      <div>
+        <p class="eyebrow light">Rendimiento mensual</p>
+        <h2>Gestiona tus ventas con una visión completa.</h2>
+        <p class="hero-copy">Consulta el catálogo, revisa el inventario y prepara tus próximas ventas desde un solo lugar.</p>
+        <button class="primary-button" type="button" (click)="scrollToProducts()">Ver productos <span>→</span></button>
+      </div>
+      <div class="hero-stat"><span>Ventas registradas</span><strong>{{ totalSales() | currency:'CLP':'symbol':'1.0-0' }}</strong><small>Datos desde sales-service</small></div>
+    </section>
+
+    <section class="metrics" aria-label="Indicadores principales">
+      <article class="metric-card"><div class="metric-icon blue">$</div><div><span>Ingresos totales</span><strong>{{ totalSales() | currency:'CLP':'symbol':'1.0-0' }}</strong><small>Desde la base de datos</small></div></article>
+      <article class="metric-card"><div class="metric-icon purple">↗</div><div><span>Ventas realizadas</span><strong>{{ salesCount() }}</strong><small>Registros en sales-service</small></div></article>
+      <article class="metric-card"><div class="metric-icon orange">▦</div><div><span>Productos activos</span><strong>{{ products().length }}</strong><small>Catálogo actual</small></div></article>
+    </section>
+
+    <section class="section-heading" id="productos">
+      <div><p class="eyebrow">Catálogo</p><h2>Productos destacados</h2></div>
+      <button class="secondary-button" type="button">Ver catálogo completo <span>→</span></button>
+    </section>
+
+    <section class="product-grid">
+      @if (loading()) {
+        <div class="loading-state">Cargando productos desde el catálogo...</div>
+      } @else if (productError()) {
+        <div class="error-state">{{ productError() }}</div>
+      } @else if (products().length === 0) {
+        <div class="empty-products">No hay productos activos en el catálogo.</div>
+      } @else {
+        @for (product of products(); track product.id; let index = $index) {
+        <article class="product-card">
+          <div class="product-image" [class]="productColor(index)"><span>{{ productInitials(product.name) }}</span></div>
+          <div class="product-info">
+            <div class="product-title-row"><h3>{{ product.name }}</h3><span class="stock-badge">En stock</span></div>
+            <p>{{ product.description }}</p>
+            <div class="product-footer"><strong>{{ product.price | currency:'CLP':'symbol':'1.0-0' }}</strong><button class="icon-button" type="button" [attr.aria-label]="'Agregar ' + product.name">+</button></div>
+          </div>
+        </article>
+        }
+      }
+    </section>
+
+    <section class="empty-state" id="ventas">
+      <div class="empty-icon">↗</div><div><h2>Ventas</h2><p>{{ salesError() || (salesCount() === 0 ? 'Aún no hay ventas registradas en la base de datos.' : 'Ventas cargadas desde sales-service.') }}</p></div><span class="coming-soon">{{ salesError() ? 'Sin conexión' : (salesCount() === 0 ? 'Sin registros' : 'Conectado') }}</span>
+    </section>
+  </main>
+</div>
