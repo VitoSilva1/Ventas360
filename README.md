@@ -28,6 +28,33 @@ La comunicación entre los componentes se realiza mediante APIs HTTP/REST. El AP
 - Integrar el frontend Angular con el API Gateway mediante HTTP/REST.
 - Completar y validar los flujos de autenticación, productos y ventas.
 
+## Ejecución con Docker Desktop
+
+Con Docker Desktop iniciado, desde la raíz del proyecto:
+
+`bash
+docker compose up --build
+`
+
+La aplicación quedará disponible en:
+
+- Frontend: `http://localhost:4200`
+- API Gateway: `http://localhost:8080`
+- Eureka: `http://localhost:8761`
+- PostgreSQL: `localhost:5433`, base `Ventas360`
+
+Para detener los contenedores:
+
+`bash
+docker compose down
+`
+
+Los datos de PostgreSQL se conservan en el volumen `ventas360-postgres-data`. Para eliminar también ese volumen:
+
+`bash
+docker compose down -v
+`
+
 ## Estructura del repositorio
 
 ```text
