@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 export interface Sale {
   id: number;
-  customerId: number;
+  customerId: number | null;
   total: number;
   status: 'CREATED' | 'CONFIRMED' | 'CANCELLED';
   createdAt: string;
@@ -22,9 +22,19 @@ export interface SaleItem {
 @Injectable({ providedIn: 'root' })
 export class SaleService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/sales';
+  private readonly apiUrl = '/api/sales';
 
   findAll(): Observable<Sale[]> {
     return this.http.get<Sale[]>(this.apiUrl);
   }
+
+  create(request: { customerId: number | null; items: SaleItemRequest[] }): Observable<Sale> {
+    return this.http.post<Sale>(this.apiUrl, request);
+  }
+}
+
+export interface SaleItemRequest {
+  productId: number;
+  quantity: number;
+  unitPrice: number;
 }

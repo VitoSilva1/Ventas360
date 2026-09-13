@@ -73,10 +73,14 @@ start_service "backend/sales-service" "sales-service"
 wait_for_service "http://localhost:8081/actuator/health" "auth-service"
 wait_for_service "http://localhost:8083/actuator/health" "product-service"
 wait_for_service "http://localhost:8082/actuator/health" "sales-service"
+wait_for_service "http://localhost:8761/eureka/apps/AUTH-SERVICE" "auth-service en Eureka"
+wait_for_service "http://localhost:8761/eureka/apps/PRODUCT-SERVICE" "product-service en Eureka"
+wait_for_service "http://localhost:8761/eureka/apps/SALES-SERVICE" "sales-service en Eureka"
 
 start_service "backend/api-gateway" "api-gateway"
 wait_for_service "http://localhost:8080/actuator/health" "api-gateway"
 wait_for_service "http://localhost:8080/products" "product route through api-gateway"
+wait_for_service "http://localhost:8080/sales" "sales route through api-gateway"
 
 start_frontend
 wait_for_service "http://localhost:4200" "frontend"

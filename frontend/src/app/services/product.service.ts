@@ -14,7 +14,7 @@ export interface Product {
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/products';
+  private readonly apiUrl = '/api/products';
 
   findAll(): Observable<Product[]> {
     return this.http.get<Product[]>(this.apiUrl);

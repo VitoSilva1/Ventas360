@@ -53,15 +53,59 @@
           <div class="product-info">
             <div class="product-title-row"><h3>{{ product.name }}</h3><span class="stock-badge">En stock</span></div>
             <p>{{ product.description }}</p>
-            <div class="product-footer"><strong>{{ product.price | currency:'CLP':'symbol':'1.0-0' }}</strong><button class="icon-button" type="button" [attr.aria-label]="'Agregar ' + product.name">+</button></div>
+            <div class="product-footer"><strong>{{ product.price | currency:'CLP':'symbol':'1.0-0' }}</strong><button class="icon-button" type="button" (click)="startSale(product.id)" [attr.aria-label]="'Agregar ' + product.name">+</button></div>
           </div>
         </article>
         }
       }
     </section>
 
-    <section class="empty-state" id="ventas">
-      <div class="empty-icon">↗</div><div><h2>Ventas</h2><p>{{ salesError() || (salesCount() === 0 ? 'Aún no hay ventas registradas en la base de datos.' : 'Ventas cargadas desde sales-service.') }}</p></div><span class="coming-soon">{{ salesError() ? 'Sin conexión' : (salesCount() === 0 ? 'Sin registros' : 'Conectado') }}</span>
+    <section class="sale-form-card" id="nueva-venta">
+      <div class="section-heading"><div><p class="eyebrow">Operación</p><h2>Nueva venta</h2></div></div>
+      <form class="sale-form" (ngSubmit)="addSaleItem()">
+        <label>Producto<select name="productId" [(ngModel)]="newSaleProductId" required><option [ngValue]="null">Selecciona un producto</option>@for (product of products(); track product.id) {<option [ngValue]="product.id">{{ product.name }} · {{ product.price | currency:'CLP':'symbol':'1.0-0' }}</option>}</select></label>
+        <label>Cantidad<input type="number" name="quantity" min="1" [(ngModel)]="newSaleQuantity" required></label>
+        <button class="primary-button action-button" type="submit" [class.button-click]="activeAction() === 'add-item'" [disabled]="!!activeAction()" [attr.aria-busy]="activeAction() === 'add-item'">
+          @if (activeAction() === 'add-item') { <span class="button-spinner" aria-hidden="true"></span> } @else { Agregar producto <span>+</span> }
+        </button>
+      </form>
+      @if (draftItems().length > 0) {
+        <div class="sale-items">
+          @for (item of draftItems(); track item.productId) {
+            <div class="sale-item-row"><span>{{ draftProductName(item.productId) }}</span><span>{{ item.quantity }} × {{ item.unitPrice | currency:'CLP':'symbol':'1.0-0' }}</span><strong>{{ draftItemSubtotal(item) | currency:'CLP':'symbol':'1.0-0' }}</strong><button type="button" [class.button-click]="activeAction() === 'remove-item'" [disabled]="!!activeAction()" (click)="removeSaleItem(item.productId)" aria-label="Eliminar producto">×</button></div>
+          }
+          <div class="sale-total"><span>Total de la venta</span><strong>{{ draftTotal() | currency:'CLP':'symbol':'1.0-0' }}</strong></div>
+          <button class="primary-button register-sale action-button" type="button" [class.button-click]="activeAction() === 'create-sale'" [disabled]="!!activeAction()" [attr.aria-busy]="activeAction() === 'create-sale'" (click)="createSale()">
+            @if (activeAction() === 'create-sale') { <span class="button-spinner" aria-hidden="true"></span> } @else { Registrar venta <span>→</span> }
+          </button>
+        </div>
+      }
+      @if (actionMessage()) { <p class="action-status" role="status" aria-live="polite"><span class="status-spinner" aria-hidden="true"></span>{{ actionMessage() }}</p> }
+      @if (saleMessage) { <p class="form-success">{{ saleMessage }}</p> }
+      @if (saleError) { <p class="form-error">{{ saleError }}</p> }
+    </section>
+
+    <section class="sales-panel" id="ventas">
+      <div class="section-heading"><div><p class="eyebrow">Historial</p><h2>Ventas registradas</h2></div><span class="coming-soon">{{ salesError() ? 'Sin conexión' : (salesCount() === 0 ? 'Sin registros' : salesCount() + ' registradas') }}</span></div>
+      @if (salesError()) {
+        <div class="error-state">{{ salesError() }}</div>
+      } @else if (salesCount() === 0) {
+        <div class="empty-state"><div class="empty-icon">↗</div><div><h2>Ventas</h2><p>Aún no hay ventas registradas en la base de datos.</p></div></div>
+      } @else {
+        <div class="sales-list">
+          @for (sale of sales(); track sale.id) {
+            <article class="sale-history-card">
+              <div class="sale-history-header"><div><strong>Venta #{{ sale.id }}</strong><span>{{ sale.createdAt | date:'dd/MM/yyyy HH:mm' }}</span></div><span class="sale-status">{{ sale.status }}</span></div>
+              <div class="sale-history-items">
+                @for (item of sale.items; track item.id) {
+                  <div><span>{{ saleProductName(item.productId) }}</span><span>{{ item.quantity }} × {{ item.unitPrice | currency:'CLP':'symbol':'1.0-0' }}</span><strong>{{ item.subtotal | currency:'CLP':'symbol':'1.0-0' }}</strong></div>
+                }
+              </div>
+              <div class="sale-history-total"><span>Total</span><strong>{{ sale.total | currency:'CLP':'symbol':'1.0-0' }}</strong></div>
+            </article>
+          }
+        </div>
+      }
     </section>
   </main>
 </div>
