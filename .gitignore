@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Java / Maven
+target/
+**/target/
+*.class
+
+# Logs
+*.log
+
+# IDEs and editors
+.idea/
+*.iml
+.vscode/
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+
+# Angular / Node.js (frontend futuro)
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.angular/
+coverage/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo

@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: service-registry
+  cloud:
+    service-registry:
+      auto-registration:
+        enabled: false
+
+server:
+  port: ${SERVER_PORT:8761}
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:${SERVER_PORT:8761}/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
