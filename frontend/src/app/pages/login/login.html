@@ -1,0 +1,33 @@
+<div class="login-shell">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark">V</div>
+      <div>
+        <strong>Ventas 360</strong>
+        <span>Panel comercial</span>
+      </div>
+    </div>
+
+    <div class="login-body">
+      <h1>Bienvenido</h1>
+      <p class="login-subtitle">Ingresa con tu cuenta Google para acceder al panel de ventas.</p>
+
+      @if (loading()) {
+        <div class="login-loading" role="status" aria-live="polite">
+          <span class="login-spinner" aria-hidden="true"></span>
+          Verificando tu sesión...
+        </div>
+      } @else {
+        <div id="google-signin-button" aria-label="Iniciar sesión con Google"></div>
+      }
+
+      @if (error()) {
+        <p class="login-error" role="alert">{{ error() }}</p>
+      }
+    </div>
+
+    <footer class="login-footer">
+      <p>Ventas 360 &mdash; DuocUC &middot; Cloud</p>
+    </footer>
+  </div>
+</div>
