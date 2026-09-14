@@ -1,16 +1,10 @@
 spring:
   application:
     name: auth-service
-  datasource:
-    url: jdbc:postgresql://localhost:5432/Ventas360
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    hibernate:
-      ddl-auto: update
-    show-sql: true
+
+google:
+  oauth:
+    client-id: ${GOOGLE_OAUTH_CLIENT_ID}
 
 server:
   port: ${SERVER_PORT:8081}
