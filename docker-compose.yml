@@ -1,3 +1,10 @@
+x-backend-environment: &backend-environment
+  DB_USERNAME: ${DB_USERNAME:-postgres}
+  DB_PASSWORD: ${DB_PASSWORD:-postgres}
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/Ventas360
+  EUREKA_URL: http://service-registry:8761/eureka/
+  EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -45,17 +52,13 @@ services:
         SERVICE_DIR: auth-service
     container_name: ventas360-auth-service
     restart: unless-stopped
-    environment: &backend-environment
+    environment:
       SERVER_PORT: 8081
-      DB_USERNAME: ${DB_USERNAME:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/Ventas360
       EUREKA_URL: http://service-registry:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
       EUREKA_INSTANCE_HOSTNAME: auth-service
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:?GOOGLE_OAUTH_CLIENT_ID must be set}
     depends_on:
-      postgres:
-        condition: service_healthy
       service-registry:
         condition: service_healthy
     ports:
