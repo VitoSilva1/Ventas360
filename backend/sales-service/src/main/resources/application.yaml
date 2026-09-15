@@ -25,3 +25,8 @@ management:
     web:
       exposure:
         include: health,info
+  # Deshabilitar exportación OTLP — no hay OpenTelemetry collector en este entorno.
+  otlp:
+    metrics:
+      export:
+        enabled: false

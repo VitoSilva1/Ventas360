@@ -14,9 +14,26 @@
 
   <main class="content" id="resumen">
     <header class="topbar">
-      <div><p class="eyebrow">Domingo, 13 de septiembre de 2026</p><h1>Resumen general</h1></div>
-      <button class="avatar" type="button" aria-label="Abrir perfil">VS</button>
+      <div><p class="eyebrow">{{ today | date:'EEEE, d \'de\' MMMM \'de\' yyyy':'':'es' }}</p><h1>Resumen general</h1></div>
+      <div class="topbar-actions">
+        @if (authService.currentUser()?.picture) {
+          <img
+            class="avatar avatar-photo"
+            [src]="authService.currentUser()!.picture!"
+            [alt]="authService.currentUser()!.name ?? authService.currentUser()!.email"
+            referrerpolicy="no-referrer"
+          />
+        } @else {
+          <button class="avatar" type="button" aria-label="Perfil">
+            {{ userInitials() }}
+          </button>
+        }
+        <button class="logout-button" type="button" (click)="authService.logout()" aria-label="Cerrar sesión">
+          Salir
+        </button>
+      </div>
     </header>
+
 
     <section class="hero-card">
       <div>
