@@ -208,16 +208,13 @@ src/
 |---|---|---|---|
 | `/` | Pública | Redirige a `/dashboard` | ✅ |
 | `/login` | Pública | Página de login con Google | ✅ |
-| `/dashboard` | 🔒 Protegida | Panel principal (productos + ventas) | ✅ |
-| `/products` | 🔒 Protegida | Listado de productos del catálogo | 🟡 Fase 3 |
-| `/products/new` | 🔒 Protegida | Crear nuevo producto | 🟡 Fase 3 |
-| `/products/:id/edit` | 🔒 Protegida | Editar producto existente | 🟡 Fase 3 |
-| `/sales` | 🔒 Protegida | Historial de ventas con filtros | 🟡 Fase 4 |
-| `/sales/new` | 🔒 Protegida | Registrar nueva venta | 🟡 Fase 4 |
-| `/sales/:id` | 🔒 Protegida | Detalle de una venta | 🟡 Fase 4 |
+| `/dashboard` | 🔒 Protegida | Panel principal: métricas, productos destacados, nueva venta, últimas ventas | ✅ |
+| `/products` | 🔒 Protegida | Tabla completa de productos con stock y estado | ✅ |
+| `/products/new` | 🔒 Protegida | Formulario para crear nuevo producto | ✅ |
+| `/products/:id/edit` | 🔒 Protegida | Formulario para editar producto existente | ✅ |
+| `/sales` | 🔒 Protegida | Historial de ventas con filtro por estado | ✅ |
+| `/sales/:id` | 🔒 Protegida | Detalle completo de una venta (ítems, subtotales, total) | ✅ |
 
-Las rutas marcadas como **🟡 Fase 3/4** ya existen en el router y están protegidas por el guard,
-pero muestran un placeholder hasta que se implemente su funcionalidad completa.
 Las rutas protegidas sin sesión activa redirigen a `/login`.
 
 

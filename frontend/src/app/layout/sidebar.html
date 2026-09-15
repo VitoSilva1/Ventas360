@@ -15,7 +15,14 @@
     </a>
   </nav>
   <div class="sidebar-footer">
-    <div class="status-dot"></div>
-    <div><strong>Backend conectado</strong><span>API Gateway &middot; :8080</span></div>
+    <div class="status-dot"
+         [class.online]="backendOnline() === true"
+         [class.offline]="backendOnline() === false"
+         [class.checking]="backendOnline() === null">
+    </div>
+    <div>
+      <strong>{{ backendOnline() === null ? 'Verificando...' : backendOnline() ? 'Backend conectado' : 'Sin conexion' }}</strong>
+      <span>API Gateway &middot; :8080</span>
+    </div>
   </div>
 </aside>

@@ -28,6 +28,10 @@ export class SaleService {
     return this.http.get<Sale[]>(this.apiUrl);
   }
 
+  findById(id: number): Observable<Sale> {
+    return this.http.get<Sale>(`${this.apiUrl}/${id}`);
+  }
+
   create(request: { customerId: number | null; items: SaleItemRequest[] }): Observable<Sale> {
     return this.http.post<Sale>(this.apiUrl, request);
   }

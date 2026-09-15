@@ -2,14 +2,64 @@
   <app-sidebar></app-sidebar>
   <main class="page-content">
     <app-topbar title="Ventas"></app-topbar>
-    <div class="placeholder-body">
-      <p class="eyebrow">Historial</p>
-      <h2>Gestion de ventas</h2>
-      <p class="placeholder-desc">
-        Esta seccion estara disponible en la Fase 4 del desarrollo.<br>
-        Aqui podras ver el historial completo de ventas, filtrar por estado y ver el detalle de cada venta.
-      </p>
-      <a routerLink="/dashboard" class="back-link">Volver al resumen</a>
+
+    <div class="list-toolbar">
+      <div>
+        <p class="eyebrow">Historial</p>
+        <h2>Ventas registradas ({{ filtered().length }})</h2>
+      </div>
+      <a class="primary-button" routerLink="/dashboard">+ Nueva venta</a>
     </div>
+
+    <!-- Filtros de estado -->
+    <div class="filter-bar">
+      <button class="filter-btn" [class.active]="statusFilter() === 'ALL'" type="button" (click)="setFilter('ALL')">Todas</button>
+      <button class="filter-btn" [class.active]="statusFilter() === 'CREATED'" type="button" (click)="setFilter('CREATED')">Creadas</button>
+      <button class="filter-btn" [class.active]="statusFilter() === 'CONFIRMED'" type="button" (click)="setFilter('CONFIRMED')">Confirmadas</button>
+      <button class="filter-btn" [class.active]="statusFilter() === 'CANCELLED'" type="button" (click)="setFilter('CANCELLED')">Canceladas</button>
+    </div>
+
+    @if (loading()) {
+      <div class="state-card">Cargando historial...</div>
+    } @else if (error()) {
+      <div class="state-card error-state">
+        {{ error() }}
+        <button class="retry-button" type="button" (click)="loadSales()">Reintentar</button>
+      </div>
+    } @else if (filtered().length === 0) {
+      <div class="state-card empty-state">
+        <span class="empty-icon">&#8599;</span>
+        <p>{{ statusFilter() === 'ALL' ? 'No hay ventas registradas.' : 'No hay ventas con este estado.' }}</p>
+      </div>
+    } @else {
+      <div class="table-wrapper">
+        <table class="sale-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Fecha</th>
+              <th>Items</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th class="col-actions">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (sale of filtered(); track sale.id) {
+              <tr>
+                <td class="col-id">{{ sale.id }}</td>
+                <td>{{ sale.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ sale.items.length }} producto{{ sale.items.length !== 1 ? 's' : '' }}</td>
+                <td><strong>{{ sale.total | currency:'CLP':'symbol':'1.0-0' }}</strong></td>
+                <td><span class="status-badge" [class]="'status-' + sale.status.toLowerCase()">{{ statusLabel(sale.status) }}</span></td>
+                <td class="col-actions">
+                  <a class="icon-btn" [routerLink]="['/sales', sale.id]" aria-label="Ver detalle">&#128269;</a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   </main>
 </div>
