@@ -4,7 +4,7 @@ Plataforma de gestión de ventas basada en una arquitectura de microservicios.
 
 ## Estado del proyecto
 
-Actualmente se ha definido el diagrama de arquitectura del backend. El frontend todavía no está implementado; será incorporado posteriormente utilizando Angular.
+Actualmente se encuentra implementada la base del backend y se incorporó un frontend inicial con Angular. La integración completa entre ambas capas continúa en desarrollo.
 
 ## Arquitectura actual
 
@@ -25,9 +25,35 @@ La comunicación entre los componentes se realiza mediante APIs HTTP/REST. El AP
 
 ## Próximos pasos
 
-- Implementar el frontend con Angular.
-- Integrar el frontend con el API Gateway mediante HTTP/REST.
+- Integrar el frontend Angular con el API Gateway mediante HTTP/REST.
 - Completar y validar los flujos de autenticación, productos y ventas.
+
+## Ejecución con Docker Desktop
+
+Con Docker Desktop iniciado, desde la raíz del proyecto:
+
+`bash
+docker compose up --build
+`
+
+La aplicación quedará disponible en:
+
+- Frontend: `http://localhost:4200`
+- API Gateway: `http://localhost:8080`
+- Eureka: `http://localhost:8761`
+- PostgreSQL: `localhost:5433`, base `Ventas360`
+
+Para detener los contenedores:
+
+`bash
+docker compose down
+`
+
+Los datos de PostgreSQL se conservan en el volumen `ventas360-postgres-data`. Para eliminar también ese volumen:
+
+`bash
+docker compose down -v
+`
 
 ## Estructura del repositorio
 
@@ -38,4 +64,7 @@ backend/
 ├── product-service/
 ├── sales-service/
 └── service-registry/
+
+frontend/
+└── Angular
 ```

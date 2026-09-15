@@ -1,0 +1,7 @@
+google:
+  oauth:
+    client-id: client-id.apps.googleusercontent.com
+
+eureka:
+  client:
+    enabled: false

@@ -1,0 +1,59 @@
+<div class="app-shell">
+  <app-sidebar></app-sidebar>
+  <main class="page-content">
+    <app-topbar [title]="sale() ? 'Venta #' + sale()!.id : 'Detalle de venta'"></app-topbar>
+
+    <a routerLink="/sales" class="back-link">&#8592; Volver al historial</a>
+
+    @if (loading()) {
+      <div class="state-card">Cargando detalle...</div>
+    } @else if (error()) {
+      <div class="state-card error-state">{{ error() }}</div>
+    } @else if (sale(); as s) {
+      <div class="detail-card">
+
+        <!-- Encabezado -->
+        <div class="detail-header">
+          <div>
+            <p class="eyebrow">Venta</p>
+            <h2>#{{ s.id }}</h2>
+            <p class="detail-date">{{ s.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+          </div>
+          <span class="status-badge" [class]="statusClass(s.status)">{{ statusLabel(s.status) }}</span>
+        </div>
+
+        <!-- Tabla de items -->
+        <div class="items-section">
+          <p class="section-label">Productos</p>
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Producto ID</th>
+                <th>Cantidad</th>
+                <th>Precio unitario</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of s.items; track item.id) {
+                <tr>
+                  <td class="col-pid">{{ productName(item.productId) }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ item.unitPrice | currency:'CLP':'symbol':'1.0-0' }}</td>
+                  <td><strong>{{ item.subtotal | currency:'CLP':'symbol':'1.0-0' }}</strong></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Total -->
+        <div class="total-row">
+          <span>Total de la venta</span>
+          <strong class="total-amount">{{ s.total | currency:'CLP':'symbol':'1.0-0' }}</strong>
+        </div>
+
+      </div>
+    }
+  </main>
+</div>
