@@ -160,7 +160,7 @@ services:
       api-gateway:
         condition: service_healthy
     ports:
-      - "4200:80"
+      - "127.0.0.1:8087:80"
 
 volumes:
   ventas360-postgres-data:
