@@ -25,15 +25,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/products/product-list').then((m) => m.ProductList),
   },
   {
-    // Creación y edición — se implementan en Fase 3; por ahora redirigen a la lista.
     path: 'products/new',
     canActivate: [authGuard],
-    redirectTo: 'products',
+    loadComponent: () => import('./pages/products/product-form').then((m) => m.ProductForm),
   },
   {
     path: 'products/:id/edit',
     canActivate: [authGuard],
-    redirectTo: 'products',
+    loadComponent: () => import('./pages/products/product-form').then((m) => m.ProductForm),
   },
 
   // Ventas — protegidas (detalle y filtros en Fase 4).

@@ -2,14 +2,96 @@
   <app-sidebar></app-sidebar>
   <main class="page-content">
     <app-topbar title="Productos"></app-topbar>
-    <div class="placeholder-body">
-      <p class="eyebrow">Catalogo</p>
-      <h2>Gestion de productos</h2>
-      <p class="placeholder-desc">
-        Esta seccion estara disponible en la Fase 3 del desarrollo.<br>
-        Aqui podras crear, editar y eliminar productos del catalogo.
-      </p>
-      <a routerLink="/dashboard" class="back-link">Volver al resumen</a>
+
+    <!-- Barra de acciones -->
+    <div class="list-toolbar">
+      <div>
+        <p class="eyebrow">Catalogo</p>
+        <h2>Productos ({{ products().length }})</h2>
+      </div>
+      <a class="primary-button" routerLink="/products/new">+ Nuevo producto</a>
     </div>
+
+    <!-- Estados de carga / error -->
+    @if (loading()) {
+      <div class="state-card loading-state">Cargando catalogo...</div>
+    } @else if (error()) {
+      <div class="state-card error-state">
+        {{ error() }}
+        <button class="retry-button" type="button" (click)="loadProducts()">Reintentar</button>
+      </div>
+    } @else if (products().length === 0) {
+      <div class="state-card empty-state">
+        <span class="empty-icon">&#9638;</span>
+        <p>No hay productos en el catalogo.</p>
+        <a routerLink="/products/new" class="primary-button">Agregar el primero</a>
+      </div>
+    } @else {
+
+      <!-- Tabla de productos -->
+      <div class="table-wrapper">
+        <table class="product-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Estado</th>
+              <th class="col-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of products(); track product.id) {
+              <tr [class.row-inactive]="!product.active">
+                <td class="col-name">
+                  <strong>{{ product.name }}</strong>
+                  <span class="product-desc">{{ product.description }}</span>
+                </td>
+                <td>{{ product.price | currency:'CLP':'symbol':'1.0-0' }}</td>
+                <td>
+                  <span class="stock-badge" [class.low-stock]="product.stock < 5">
+                    {{ product.stock }}
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge" [class.active]="product.active">
+                    {{ product.active ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="col-actions">
+                  <a class="icon-btn edit-btn" [routerLink]="['/products', product.id, 'edit']" aria-label="Editar">
+                    &#9998;
+                  </a>
+                  <button
+                    class="icon-btn delete-btn"
+                    type="button"
+                    (click)="requestDelete(product.id)"
+                    [disabled]="deletingId() === product.id"
+                    aria-label="Eliminar"
+                  >
+                    {{ deletingId() === product.id ? '...' : '&#10005;' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Modal de confirmacion -->
+    @if (confirmDeleteId !== null) {
+      <div class="modal-overlay" (click)="cancelDelete()">
+        <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+          <p class="modal-title">Eliminar producto</p>
+          <p class="modal-body">Esta accion es permanente. El producto se eliminara del catalogo.</p>
+          <div class="modal-actions">
+            <button class="secondary-button" type="button" (click)="cancelDelete()">Cancelar</button>
+            <button class="danger-button" type="button" (click)="confirmDelete()">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    }
+
   </main>
 </div>

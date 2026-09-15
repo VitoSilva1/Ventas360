@@ -1,0 +1,130 @@
+﻿<div class="app-shell">
+  <app-sidebar></app-sidebar>
+  <main class="page-content">
+    <app-topbar [title]="isEdit() ? 'Editar producto' : 'Nuevo producto'"></app-topbar>
+
+    <div class="form-header">
+      <a routerLink="/products" class="back-link">&#8592; Volver al catalogo</a>
+      <p class="eyebrow">Catalogo</p>
+      <h2>{{ isEdit() ? 'Editar producto' : 'Crear nuevo producto' }}</h2>
+    </div>
+
+    @if (loading()) {
+      <div class="state-card">Cargando datos del producto...</div>
+    } @else if (loadError()) {
+      <div class="state-card error-state">{{ loadError() }}</div>
+    } @else {
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="product-form" novalidate>
+
+        <!-- Nombre -->
+        <div class="field-group">
+          <label class="field-label" for="name">Nombre del producto</label>
+          <input
+            id="name"
+            type="text"
+            class="field-input"
+            [class.invalid]="hasError('name', 'required') || hasError('name', 'maxlength')"
+            formControlName="name"
+            placeholder="Ej: Laptop Dell Inspiron 15"
+            maxlength="120"
+          />
+          @if (hasError('name', 'required')) {
+            <span class="field-error">El nombre es obligatorio.</span>
+          } @else if (hasError('name', 'maxlength')) {
+            <span class="field-error">Maximo 120 caracteres.</span>
+          }
+        </div>
+
+        <!-- Descripcion -->
+        <div class="field-group">
+          <label class="field-label" for="description">Descripcion</label>
+          <textarea
+            id="description"
+            class="field-input field-textarea"
+            [class.invalid]="hasError('description', 'required') || hasError('description', 'maxlength')"
+            formControlName="description"
+            placeholder="Describe el producto brevemente..."
+            maxlength="500"
+            rows="3"
+          ></textarea>
+          @if (hasError('description', 'required')) {
+            <span class="field-error">La descripcion es obligatoria.</span>
+          } @else if (hasError('description', 'maxlength')) {
+            <span class="field-error">Maximo 500 caracteres.</span>
+          }
+        </div>
+
+        <!-- Precio y Stock en fila -->
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label" for="price">Precio (CLP)</label>
+            <input
+              id="price"
+              type="number"
+              class="field-input"
+              [class.invalid]="hasError('price', 'required') || hasError('price', 'min')"
+              formControlName="price"
+              placeholder="0"
+              min="0"
+            />
+            @if (hasError('price', 'required')) {
+              <span class="field-error">El precio es obligatorio.</span>
+            } @else if (hasError('price', 'min')) {
+              <span class="field-error">El precio debe ser mayor a 0.</span>
+            }
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="stock">Stock</label>
+            <input
+              id="stock"
+              type="number"
+              class="field-input"
+              [class.invalid]="hasError('stock', 'required') || hasError('stock', 'min')"
+              formControlName="stock"
+              placeholder="0"
+              min="0"
+            />
+            @if (hasError('stock', 'required')) {
+              <span class="field-error">El stock es obligatorio.</span>
+            } @else if (hasError('stock', 'min')) {
+              <span class="field-error">El stock no puede ser negativo.</span>
+            }
+          </div>
+        </div>
+
+        <!-- Toggle activo -->
+        <div class="field-group toggle-group">
+          <label class="toggle-label">
+            <input type="checkbox" formControlName="active" class="toggle-input" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            Producto activo
+          </label>
+          <small class="toggle-hint">Los productos inactivos no aparecen en el dashboard ni son seleccionables en ventas.</small>
+        </div>
+
+        <!-- Error de guardado -->
+        @if (saveError()) {
+          <div class="save-error">{{ saveError() }}</div>
+        }
+
+        <!-- Acciones -->
+        <div class="form-actions">
+          <a routerLink="/products" class="secondary-button">Cancelar</a>
+          <button
+            class="primary-button"
+            type="submit"
+            [disabled]="saving()"
+            [attr.aria-busy]="saving()"
+          >
+            @if (saving()) { <span class="btn-spinner"></span> } @else {
+              {{ isEdit() ? 'Guardar cambios' : 'Crear producto' }}
+            }
+          </button>
+        </div>
+
+      </form>
+    }
+  </main>
+</div>
