@@ -98,6 +98,7 @@ export class Dashboard implements OnInit {
     this.saleError = '';
     this.saleService.create({ customerId: null, items: this.draftItems() }).subscribe({
       next: (sale) => {
+        this.salesError.set('');
         this.sales.update(s => [sale, ...s]);
         this.draftItems.set([]);
         this.saleMessage = `Venta #${sale.id} registrada correctamente.`;
