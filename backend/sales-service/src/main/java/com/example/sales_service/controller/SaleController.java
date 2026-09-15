@@ -18,7 +18,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/sales")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {
+        "http://localhost:4200",
+        "https://ventas360.duckdns.org"
+})
 public class SaleController {
 
     private final SaleService saleService;
