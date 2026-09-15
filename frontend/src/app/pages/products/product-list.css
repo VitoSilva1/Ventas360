@@ -1,0 +1,8 @@
+﻿.app-shell { min-height: 100vh; display: flex; background: #f5f7fb; color: #17213a; }
+.page-content { flex: 1; padding: 35px 48px 56px; }
+.placeholder-body { background: #fff; border: 1px dashed #d9dfeb; border-radius: 16px; padding: 48px 40px; max-width: 560px; }
+.eyebrow { color: #8994aa; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; margin: 0 0 8px; }
+h2 { font-size: 22px; margin: 0 0 12px; letter-spacing: -.03em; }
+.placeholder-desc { color: #8a95aa; font-size: 13px; line-height: 1.6; margin: 0 0 24px; }
+.back-link { color: #315cf5; font-size: 13px; font-weight: 600; text-decoration: none; }
+.back-link:hover { text-decoration: underline; }

@@ -1,0 +1,23 @@
+﻿<header class="topbar">
+  <div>
+    <p class="eyebrow">{{ today | date:"EEEE, d 'de' MMMM 'de' yyyy":'':'es' }}</p>
+    <h1>{{ title }}</h1>
+  </div>
+  <div class="topbar-actions">
+    @if (authService.currentUser()?.picture) {
+      <img
+        class="avatar avatar-photo"
+        [src]="authService.currentUser()!.picture!"
+        [alt]="authService.currentUser()!.name ?? authService.currentUser()!.email"
+        referrerpolicy="no-referrer"
+      />
+    } @else {
+      <button class="avatar" type="button" aria-label="Perfil">
+        {{ userInitials() }}
+      </button>
+    }
+    <button class="logout-button" type="button" (click)="authService.logout()" aria-label="Cerrar sesion">
+      Salir
+    </button>
+  </div>
+</header>

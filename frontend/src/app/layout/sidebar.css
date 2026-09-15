@@ -1,0 +1,17 @@
+﻿.sidebar { width: 248px; background: #fff; border-right: 1px solid #e7ebf3; padding: 28px 18px 20px; display: flex; flex-direction: column; flex-shrink: 0; }
+.brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 38px; }
+.brand-mark { width: 37px; height: 37px; display: grid; place-items: center; color: white; font-size: 20px; font-weight: 800; border-radius: 11px; background: linear-gradient(135deg, #315cf5, #794cf6); box-shadow: 0 8px 18px #315cf538; }
+.brand strong, .brand span { display: block; }
+.brand strong { font-size: 15px; letter-spacing: -.02em; }
+.brand span { color: #97a1b7; font-size: 11px; margin-top: 3px; }
+.main-nav { display: grid; gap: 7px; }
+.nav-item { color: #7d88a1; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 13px; padding: 12px 13px; border-radius: 10px; transition: .2s ease; }
+.nav-item:hover, .nav-item.active { color: #315cf5; background: #eef2ff; }
+.nav-icon { width: 18px; text-align: center; font-size: 19px; font-weight: 400; }
+.sidebar-footer { margin-top: auto; display: flex; gap: 10px; align-items: center; padding: 15px 10px 0; border-top: 1px solid #edf0f5; }
+.sidebar-footer strong, .sidebar-footer span { display: block; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #20bf78; box-shadow: 0 0 0 4px #20bf781c; }
+.sidebar-footer strong { font-size: 11px; color: #546078; }
+.sidebar-footer span { font-size: 10px; color: #a0a8b9; margin-top: 3px; }
+@media (max-width: 900px) { .sidebar { width: 205px; } }
+@media (max-width: 640px) { .sidebar { width: auto; padding: 16px; border-right: 0; border-bottom: 1px solid #e7ebf3; } .brand { padding: 0 0 15px; } .main-nav { display: flex; } .nav-item { flex: 1; justify-content: center; padding: 9px; } .sidebar-footer { display: none; } }

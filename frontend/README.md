@@ -164,19 +164,35 @@ src/
 │   │   └── auth.guard.ts          # Protege rutas que requieren sesión
 │   ├── interceptors/
 │   │   └── auth.interceptor.ts    # Agrega Bearer token a cada petición HTTP
+│   ├── layout/                    # ← Fase 2: componentes de layout compartido
+│   │   ├── sidebar.ts             # Sidebar con routerLink/routerLinkActive
+│   │   ├── sidebar.html
+│   │   ├── sidebar.css
+│   │   ├── topbar.ts              # Topbar con fecha, usuario y logout
+│   │   ├── topbar.html
+│   │   └── topbar.css
 │   ├── pages/
-│   │   └── login/
-│   │       ├── login.ts           # Página de login con Google Sign-In
-│   │       ├── login.html
-│   │       └── login.css
+│   │   ├── login/
+│   │   │   ├── login.ts           # Página de login con Google Sign-In
+│   │   │   ├── login.html
+│   │   │   └── login.css
+│   │   ├── products/              # ← Fase 2 (placeholder) / Fase 3 (CRUD real)
+│   │   │   ├── product-list.ts    # Lista de productos
+│   │   │   ├── product-list.html
+│   │   │   └── product-list.css
+│   │   └── sales/                 # ← Fase 2 (placeholder) / Fase 4 (real)
+│   │       ├── sale-list.ts       # Lista de ventas
+│   │       ├── sale-list.html
+│   │       └── sale-list.css
 │   ├── services/
 │   │   ├── auth.service.ts        # Sesión, token, perfil de usuario
 │   │   ├── product.service.ts     # Consume /api/products
 │   │   └── sale.service.ts        # Consume /api/sales
-│   ├── app.ts                     # Componente raíz (dashboard provisional)
+│   ├── shell.ts                   # Componente raíz — solo contiene <router-outlet>
+│   ├── app.ts                     # Dashboard (componente del panel principal)
 │   ├── app.html
 │   ├── app.css
-│   ├── app.routes.ts              # Rutas: /, /login, /dashboard
+│   ├── app.routes.ts              # Rutas: /, /login, /dashboard, /products, /sales
 │   └── app.config.ts              # Providers: router, http + interceptor
 ├── environments/
 │   ├── environment.ts             # ← Configurar googleClientId aquí
@@ -188,15 +204,22 @@ src/
 
 ## 7. Rutas disponibles
 
-| Ruta | Acceso | Descripción |
-|---|---|---|
-| `/` | Pública | Redirige a `/dashboard` |
-| `/login` | Pública | Página de login con Google |
-| `/dashboard` | 🔒 Protegida | Panel principal (productos + ventas) |
-| `/**` | — | Redirige a `/dashboard` |
+| Ruta | Acceso | Descripción | Estado |
+|---|---|---|---|
+| `/` | Pública | Redirige a `/dashboard` | ✅ |
+| `/login` | Pública | Página de login con Google | ✅ |
+| `/dashboard` | 🔒 Protegida | Panel principal (productos + ventas) | ✅ |
+| `/products` | 🔒 Protegida | Listado de productos del catálogo | 🟡 Fase 3 |
+| `/products/new` | 🔒 Protegida | Crear nuevo producto | 🟡 Fase 3 |
+| `/products/:id/edit` | 🔒 Protegida | Editar producto existente | 🟡 Fase 3 |
+| `/sales` | 🔒 Protegida | Historial de ventas con filtros | 🟡 Fase 4 |
+| `/sales/new` | 🔒 Protegida | Registrar nueva venta | 🟡 Fase 4 |
+| `/sales/:id` | 🔒 Protegida | Detalle de una venta | 🟡 Fase 4 |
 
-Las rutas protegidas verifican si hay token en `localStorage`.
-Sin sesión activa, redirigen a `/login`.
+Las rutas marcadas como **🟡 Fase 3/4** ya existen en el router y están protegidas por el guard,
+pero muestran un placeholder hasta que se implemente su funcionalidad completa.
+Las rutas protegidas sin sesión activa redirigen a `/login`.
+
 
 ---
 

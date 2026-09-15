@@ -2,31 +2,53 @@ import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  // Raíz: redirigir al dashboard (el guard se encargará de redirigir a /login si no hay sesión).
-  {
-    path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full',
-  },
+  // Raíz → dashboard.
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
-  // Página de login — pública, sin guard.
+  // Login — pública.
   {
     path: 'login',
-    loadComponent: () =>
-      import('./pages/login/login').then((m) => m.LoginComponent),
+    loadComponent: () => import('./pages/login/login').then((m) => m.LoginComponent),
   },
 
-  // Dashboard principal — protegido.
-  // Mientras se implementa la Fase 5, redirige al componente App existente como placeholder.
+  // Dashboard — protegido.
   {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () => import('./app').then((m) => m.App),
   },
 
-  // Ruta comodín: redirigir al dashboard (el guard manejará la autenticación).
+  // Productos — protegidos (CRUD completo en Fase 3).
   {
-    path: '**',
-    redirectTo: 'dashboard',
+    path: 'products',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/products/product-list').then((m) => m.ProductList),
   },
+  {
+    // Creación y edición — se implementan en Fase 3; por ahora redirigen a la lista.
+    path: 'products/new',
+    canActivate: [authGuard],
+    redirectTo: 'products',
+  },
+  {
+    path: 'products/:id/edit',
+    canActivate: [authGuard],
+    redirectTo: 'products',
+  },
+
+  // Ventas — protegidas (detalle y filtros en Fase 4).
+  {
+    path: 'sales',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/sales/sale-list').then((m) => m.SaleList),
+  },
+  {
+    path: 'sales/new',
+    canActivate: [authGuard],
+    redirectTo: 'dashboard',  // El formulario de nueva venta vive en el dashboard por ahora.
+  },
+
+  // Comodín.
+  { path: '**', redirectTo: 'dashboard' },
 ];
+

@@ -1,39 +1,8 @@
 <div class="app-shell">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">V</div>
-      <div><strong>Ventas 360</strong><span>Panel comercial</span></div>
-    </div>
-    <nav class="main-nav" aria-label="Navegación principal">
-      <a class="nav-item active" href="#resumen"><span class="nav-icon">⌂</span>Resumen</a>
-      <a class="nav-item" href="#productos"><span class="nav-icon">▦</span>Productos</a>
-      <a class="nav-item" href="#ventas"><span class="nav-icon">↗</span>Ventas</a>
-    </nav>
-    <div class="sidebar-footer"><div class="status-dot"></div><div><strong>Backend conectado</strong><span>API Gateway · :8080</span></div></div>
-  </aside>
+  <app-sidebar></app-sidebar>
 
   <main class="content" id="resumen">
-    <header class="topbar">
-      <div><p class="eyebrow">{{ today | date:'EEEE, d \'de\' MMMM \'de\' yyyy':'':'es' }}</p><h1>Resumen general</h1></div>
-      <div class="topbar-actions">
-        @if (authService.currentUser()?.picture) {
-          <img
-            class="avatar avatar-photo"
-            [src]="authService.currentUser()!.picture!"
-            [alt]="authService.currentUser()!.name ?? authService.currentUser()!.email"
-            referrerpolicy="no-referrer"
-          />
-        } @else {
-          <button class="avatar" type="button" aria-label="Perfil">
-            {{ userInitials() }}
-          </button>
-        }
-        <button class="logout-button" type="button" (click)="authService.logout()" aria-label="Cerrar sesión">
-          Salir
-        </button>
-      </div>
-    </header>
-
+    <app-topbar title="Resumen general"></app-topbar>
 
     <section class="hero-card">
       <div>

@@ -1,20 +1,20 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from './services/auth.service';
+import { Sidebar } from './layout/sidebar';
+import { Topbar } from './layout/topbar';
 import { Product, ProductService } from './services/product.service';
 import { Sale, SaleItemRequest, SaleService } from './services/sale.service';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CurrencyPipe, DatePipe, FormsModule],
+  imports: [CurrencyPipe, DatePipe, FormsModule, Sidebar, Topbar],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly saleService = inject(SaleService);
-  protected readonly authService = inject(AuthService);
   protected readonly products = signal<Product[]>([]);
   protected readonly sales = signal<Sale[]>([]);
   protected readonly loading = signal(true);
@@ -28,20 +28,6 @@ export class App implements OnInit {
   protected readonly activeAction = signal('');
   protected saleMessage = '';
   protected saleError = '';
-
-  /** Fecha actual para mostrar en el topbar — se evalúa una vez al cargar el componente. */
-  protected readonly today = new Date();
-
-  /** Iniciales del usuario autenticado para el avatar cuando no hay foto de perfil. */
-  protected readonly userInitials = computed(() => {
-    const user = this.authService.currentUser();
-    if (!user) return '?';
-    if (user.name) {
-      return user.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-    }
-    return user.email.slice(0, 2).toUpperCase();
-  });
-
 
   ngOnInit(): void {
     // La restauración de sesión la maneja Shell (componente raíz).
