@@ -2,31 +2,25 @@ import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  // Raíz: redirigir al dashboard (el guard se encargará de redirigir a /login si no hay sesión).
-  {
-    path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full',
-  },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
-  // Página de login — pública, sin guard.
-  {
-    path: 'login',
-    loadComponent: () =>
-      import('./pages/login/login').then((m) => m.LoginComponent),
-  },
+  { path: 'login', loadComponent: () => import('./pages/login/login').then((m) => m.LoginComponent) },
 
-  // Dashboard principal — protegido.
-  // Mientras se implementa la Fase 5, redirige al componente App existente como placeholder.
+  // Dashboard — ahora en su propio componente (Fase 5).
   {
     path: 'dashboard',
     canActivate: [authGuard],
-    loadComponent: () => import('./app').then((m) => m.App),
+    loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
   },
 
-  // Ruta comodín: redirigir al dashboard (el guard manejará la autenticación).
-  {
-    path: '**',
-    redirectTo: 'dashboard',
-  },
+  // Productos — CRUD completo (Fase 3).
+  { path: 'products',          canActivate: [authGuard], loadComponent: () => import('./pages/products/product-list').then((m) => m.ProductList) },
+  { path: 'products/new',      canActivate: [authGuard], loadComponent: () => import('./pages/products/product-form').then((m) => m.ProductForm) },
+  { path: 'products/:id/edit', canActivate: [authGuard], loadComponent: () => import('./pages/products/product-form').then((m) => m.ProductForm) },
+
+  // Ventas — lista, detalle y nueva venta (Fases 4).
+  { path: 'sales',     canActivate: [authGuard], loadComponent: () => import('./pages/sales/sale-list').then((m) => m.SaleList) },
+  { path: 'sales/:id', canActivate: [authGuard], loadComponent: () => import('./pages/sales/sale-detail').then((m) => m.SaleDetail) },
+
+  { path: '**', redirectTo: 'dashboard' },
 ];

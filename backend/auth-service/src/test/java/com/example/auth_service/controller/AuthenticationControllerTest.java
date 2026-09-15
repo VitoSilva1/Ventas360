@@ -38,7 +38,7 @@ class AuthenticationControllerTest {
 
     @Test
     void googleSignInIsPublicAndReturnsVerifiedProfile() throws Exception {
-        mockMvc.perform(post("/api/auth/google/sign-in").contentType(APPLICATION_JSON)
+        mockMvc.perform(post("/auth/google/sign-in").contentType(APPLICATION_JSON)
                         .content("{\"credential\":\"" + TestConfiguration.token(Map.of()) + "\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.subject").value("subject"))
                 .andExpect(jsonPath("$.email").value("user@example.com"));
@@ -46,17 +46,17 @@ class AuthenticationControllerTest {
 
     @Test
     void googleSignInRejectsMissingAndInvalidCredentials() throws Exception {
-        mockMvc.perform(post("/api/auth/google/sign-in").contentType(APPLICATION_JSON).content("{}"))
+        mockMvc.perform(post("/auth/google/sign-in").contentType(APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest());
-        mockMvc.perform(post("/api/auth/google/sign-in").contentType(APPLICATION_JSON).content("{\"credential\":\"bad\"}"))
+        mockMvc.perform(post("/auth/google/sign-in").contentType(APPLICATION_JSON).content("{\"credential\":\"bad\"}"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void logoutIsProtectedAndStatelessForAValidGoogleToken() throws Exception {
-        mockMvc.perform(post("/api/auth/logout").header("Authorization", "Bearer " + TestConfiguration.token(Map.of())))
+        mockMvc.perform(post("/auth/logout").header("Authorization", "Bearer " + TestConfiguration.token(Map.of())))
                 .andExpect(status().isNoContent());
-        mockMvc.perform(post("/api/auth/logout")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/auth/logout")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -64,7 +64,7 @@ class AuthenticationControllerTest {
         for (Map<String, Object> omittedOrInvalidClaim : java.util.List.<Map<String, Object>>of(
                 Map.<String, Object>of("email_verified", false), Map.<String, Object>of("email", ""),
                 Map.<String, Object>of("sub", ""))) {
-            mockMvc.perform(post("/api/auth/logout").header("Authorization", "Bearer " + TestConfiguration.token(omittedOrInvalidClaim)))
+            mockMvc.perform(post("/auth/logout").header("Authorization", "Bearer " + TestConfiguration.token(omittedOrInvalidClaim)))
                     .andExpect(status().isUnauthorized());
         }
     }
