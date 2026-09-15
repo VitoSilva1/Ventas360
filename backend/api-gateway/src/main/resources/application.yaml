@@ -18,20 +18,6 @@ spring:
               uri: lb://sales-service
               predicates:
                 - Path=/sales/**
-          globalcors:
-            add-to-simple-url-handler-mapping: true
-            cors-configurations:
-              '[/**]':
-                allowedOrigins:
-                  - "http://localhost:4200"
-                  - "https://ventas360.duckdns.org"
-                allowedMethods:
-                  - GET
-                  - POST
-                  - PUT
-                  - DELETE
-                  - OPTIONS
-                allowedHeaders: "*"
 
 eureka:
   client:
