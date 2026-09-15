@@ -6,5 +6,5 @@ export const environment = {
    * Reemplazar este valor con el Client ID real antes de probar el login.
    * No agregar client secrets aquí — solo el Client ID es público y seguro en el frontend.
    */
-  googleClientId: 'TU_CLIENT_ID.apps.googleusercontent.com',
+  googleClientId: '526537382113-59th2e84qoqs13d0q6dd4ivfo4fp8dva.apps.googleusercontent.com',
 };
