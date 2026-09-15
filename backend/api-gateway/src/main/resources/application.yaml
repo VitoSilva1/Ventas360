@@ -21,7 +21,9 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "http://localhost:4200"
+            allowedOrigins:
+              - "http://localhost:4200"
+              - "https://ventas360.duckdns.org"
             allowedMethods:
               - GET
               - POST
