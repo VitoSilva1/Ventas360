@@ -22,7 +22,7 @@ public class SecurityConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         // Endpoint público de autenticación Google
-                        .requestMatchers("/api/auth/google/sign-in").permitAll()
+                        .requestMatchers("/auth/google/sign-in").permitAll()
                         // Actuator — necesario para el healthcheck de Docker y monitoreo
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .anyRequest().authenticated())

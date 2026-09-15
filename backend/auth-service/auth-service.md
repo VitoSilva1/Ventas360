@@ -18,7 +18,7 @@ frontend UI.
 
 ## Endpoints
 
-### `POST /api/auth/google/sign-in`
+### `POST /auth/google/sign-in`
 
 Public endpoint:
 
@@ -29,7 +29,7 @@ Public endpoint:
 Returns the verified profile (`subject`, `email`, optional `name`, optional `picture`). Invalid,
 expired, wrongly signed, wrongly issued, wrongly addressed, or unverified-email tokens return 401.
 
-### `POST /api/auth/logout`
+### `POST /auth/logout`
 
 Requires `Authorization: Bearer <google-id-token>` and returns `204 No Content`.
 
