@@ -11,7 +11,7 @@ Este archivo enumera los **nombres** de las variables usadas por `docker-compose
 | `auth-service` | `SERVER_PORT`, `EUREKA_URL`, `EUREKA_INSTANCE_PREFER_IP_ADDRESS`, `EUREKA_INSTANCE_HOSTNAME`, `GOOGLE_OAUTH_CLIENT_ID` |
 | `product-service` | `DB_USERNAME`, `DB_PASSWORD`, `SPRING_DATASOURCE_URL`, `EUREKA_URL`, `EUREKA_INSTANCE_PREFER_IP_ADDRESS`, `SERVER_PORT`, `EUREKA_INSTANCE_HOSTNAME` |
 | `sales-service` | `DB_USERNAME`, `DB_PASSWORD`, `SPRING_DATASOURCE_URL`, `EUREKA_URL`, `EUREKA_INSTANCE_PREFER_IP_ADDRESS`, `SERVER_PORT`, `EUREKA_INSTANCE_HOSTNAME` |
-| `api-gateway` | `SERVER_PORT`, `EUREKA_URL` |
+| `api-gateway` | `SERVER_PORT`, `EUREKA_URL`, `GOOGLE_OAUTH_CLIENT_ID` |
 | `frontend` | Ninguna variable declarada en Compose actualmente |
 
 ## Detalle por servicio
@@ -61,6 +61,7 @@ client secret al frontend ni al repositorio.
 
 - `SERVER_PORT`
 - `EUREKA_URL`
+- `GOOGLE_OAUTH_CLIENT_ID`
 
 ### `frontend`
 
@@ -76,4 +77,3 @@ export GOOGLE_OAUTH_CLIENT_ID="tu-client-id.apps.googleusercontent.com"
 
 Las variables de PostgreSQL pueden definirse con `DB_USERNAME` y `DB_PASSWORD`; Compose tiene
 valores predeterminados para desarrollo local.
-

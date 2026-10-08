@@ -19,6 +19,10 @@ spring:
               predicates:
                 - Path=/sales/**
 
+google:
+  oauth:
+    client-id: ${GOOGLE_OAUTH_CLIENT_ID}
+
 eureka:
   client:
     service-url:

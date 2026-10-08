@@ -38,10 +38,11 @@ docker compose up --build
 
 La aplicación quedará disponible en:
 
-- Frontend: `http://localhost:4200`
+- Frontend: `http://localhost:8087`
 - API Gateway: `http://localhost:8080`
-- Eureka: `http://localhost:8761`
-- PostgreSQL: `localhost:5433`, base `Ventas360`
+
+Los servicios internos, Eureka y PostgreSQL no publican puertos al host; se accede a ellos
+únicamente dentro de la red Docker a través del gateway o de los nombres de servicio.
 
 Para detener los contenedores:
 
