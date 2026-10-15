@@ -1,0 +1,8 @@
+services:
+  mail-carrier:
+    build: .
+    env_file: .env
+    volumes:
+      - ./samples:/samples:ro
+    command: ["/samples/payload.json"]
+    restart: "no"

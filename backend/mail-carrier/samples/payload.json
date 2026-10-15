@@ -1,0 +1,6 @@
+{
+  "to": ["destinatario@example.com"],
+  "subject": "Prueba de mail-carrier",
+  "html": "<h1>Ventas360</h1><p>Este es un correo de prueba.</p>",
+  "text": "Ventas360 - Este es un correo de prueba."
+}
