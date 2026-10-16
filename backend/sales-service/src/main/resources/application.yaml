@@ -1,6 +1,15 @@
+logging:
+  structured:
+    format: ecs
+
 spring:
   application:
     name: sales-service
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
   datasource:
     url: jdbc:postgresql://localhost:5432/Ventas360
     username: ${DB_USERNAME:postgres}
@@ -19,6 +28,11 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+rabbitmq:
+  ventas360:
+    queues:
+      sales: ventas360.sales.queue
 
 management:
   endpoints:

@@ -5,7 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../layout/sidebar';
 import { Topbar } from '../../layout/topbar';
 import { Product, ProductService } from '../../services/product.service';
-import { Sale, SaleItemRequest, SaleService } from '../../services/sale.service';
+import { Sale, SaleEventItemRequest, SaleItemRequest, SaleService } from '../../services/sale.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -16,6 +17,7 @@ import { Sale, SaleItemRequest, SaleService } from '../../services/sale.service'
 export class Dashboard implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly saleService = inject(SaleService);
+  private readonly authService = inject(AuthService);
 
   protected readonly products = signal<Product[]>([]);
   protected readonly sales = signal<Sale[]>([]);
@@ -96,13 +98,27 @@ export class Dashboard implements OnInit {
     this.activeAction.set('create-sale');
     this.saleMessage = '';
     this.saleError = '';
-    this.saleService.create({ customerId: null, items: this.draftItems() }).subscribe({
-      next: (sale) => {
-        this.salesError.set('');
-        this.sales.update(s => [sale, ...s]);
+
+    const user = this.authService.currentUser();
+    const items: SaleEventItemRequest[] = this.draftItems().map(i => ({
+      productId: i.productId,
+      productName: this.draftProductName(i.productId),
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+    }));
+
+    this.saleService.publishEvent({
+      saleId: crypto.randomUUID(),
+      customerId: null,
+      customerEmail: user?.email ?? '',
+      saleDate: new Date().toISOString(),
+      items,
+    }).subscribe({
+      next: (res) => {
         this.draftItems.set([]);
-        this.saleMessage = `Venta #${sale.id} registrada correctamente.`;
+        this.saleMessage = `Venta registrada. Evento: ${res.eventId}`;
         this.activeAction.set('');
+        this.saleService.findAll().subscribe({ next: (s) => this.sales.set(s) });
       },
       error: () => { this.saleError = 'Error al registrar la venta. Intenta de nuevo.'; this.activeAction.set(''); },
     });

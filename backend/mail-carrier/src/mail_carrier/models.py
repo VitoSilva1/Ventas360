@@ -1,4 +1,7 @@
+from datetime import datetime
+from decimal import Decimal
 from typing import Any, Self
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError, field_validator
 
@@ -35,6 +38,21 @@ class EmailPayload(BaseModel):
             return cls.model_validate_json(raw)
         except ValidationError as e:
             raise _invalid(e) from e
+
+
+class SaleEventItemModel(BaseModel):
+    productId: int
+    productName: str
+    quantity: int
+    unitPrice: Decimal
+
+
+class SaleEvent(BaseModel):
+    saleId: UUID
+    customerId: int | None = None
+    customerEmail: str
+    saleDate: datetime
+    items: list[SaleEventItemModel]
 
 
 def _invalid(e: ValidationError) -> InvalidPayloadError:

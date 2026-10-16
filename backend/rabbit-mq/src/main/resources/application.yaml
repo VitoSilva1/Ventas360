@@ -1,0 +1,37 @@
+server:
+  port: ${SERVER_PORT:8084}
+
+spring:
+  application:
+    name: rabbit-mq
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+rabbitmq:
+  ventas360:
+    exchange:
+      sales-fanout: ventas360.sales.fanout
+    queues:
+      sales: ventas360.sales.queue
+      mail: ventas360.mail.queue
+    dlx:
+      name: ventas360.dlx
+    dlq:
+      sales: ventas360.sales.dlq
+      mail: ventas360.mail.dlq
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

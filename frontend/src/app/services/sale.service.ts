@@ -19,10 +19,31 @@ export interface SaleItem {
   subtotal: number;
 }
 
+export interface SaleEventRequest {
+  saleId: string;
+  customerId: number | null;
+  customerEmail: string;
+  saleDate: string;
+  items: SaleEventItemRequest[];
+}
+
+export interface SaleEventItemRequest {
+  productId: number;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface SaleEventResponse {
+  eventId: string;
+  exchange: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SaleService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/sales';
+  private readonly eventsUrl = '/api/sales/events';
 
   findAll(): Observable<Sale[]> {
     return this.http.get<Sale[]>(this.apiUrl);
@@ -32,8 +53,8 @@ export class SaleService {
     return this.http.get<Sale>(`${this.apiUrl}/${id}`);
   }
 
-  create(request: { customerId: number | null; items: SaleItemRequest[] }): Observable<Sale> {
-    return this.http.post<Sale>(this.apiUrl, request);
+  publishEvent(request: SaleEventRequest): Observable<SaleEventResponse> {
+    return this.http.post<SaleEventResponse>(this.eventsUrl, request);
   }
 }
 
