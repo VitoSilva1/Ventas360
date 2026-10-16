@@ -36,3 +36,5 @@ coverage/
 
 # Local working docs
 docs/
+# Local Maven dependency cache
+.maven-cache/

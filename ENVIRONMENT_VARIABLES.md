@@ -61,7 +61,7 @@ client secret al frontend ni al repositorio.
 
 - `SERVER_PORT`
 - `EUREKA_URL`
-- `GOOGLE_OAUTH_CLIENT_ID`
+- `GOOGLE_OAUTH_CLIENT_ID` (mismo Client ID que auth-service y frontend)
 
 ### `frontend`
 
@@ -77,3 +77,4 @@ export GOOGLE_OAUTH_CLIENT_ID="tu-client-id.apps.googleusercontent.com"
 
 Las variables de PostgreSQL pueden definirse con `DB_USERNAME` y `DB_PASSWORD`; Compose tiene
 valores predeterminados para desarrollo local.
+
