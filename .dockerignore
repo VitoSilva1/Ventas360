@@ -8,3 +8,6 @@
 logs
 *.log
 .env
+
+# Local Maven dependency cache
+.maven-cache/

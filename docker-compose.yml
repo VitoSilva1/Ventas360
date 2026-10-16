@@ -14,6 +14,8 @@ services:
       POSTGRES_DB: Ventas360
       POSTGRES_USER: ${DB_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    networks:
+      - backend
     volumes:
       - ventas360-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -34,6 +36,8 @@ services:
     environment:
       SERVER_PORT: 8761
       EUREKA_URL: http://service-registry:8761/eureka/
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health | grep -q UP"]
       interval: 5s
@@ -57,6 +61,8 @@ services:
     depends_on:
       service-registry:
         condition: service_healthy
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q UP"]
       interval: 5s
@@ -80,6 +86,8 @@ services:
         condition: service_healthy
       service-registry:
         condition: service_healthy
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health | grep -q UP"]
       interval: 5s
@@ -111,6 +119,8 @@ services:
         condition: service_healthy
       rabbit-mq:
         condition: service_healthy
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health | grep -q UP"]
       interval: 5s
@@ -138,6 +148,9 @@ services:
         condition: service_healthy
       sales-service:
         condition: service_healthy
+    networks:
+      - backend
+      - edge
     ports:
       - "8080:8080"
     healthcheck:
@@ -158,6 +171,8 @@ services:
     depends_on:
       api-gateway:
         condition: service_healthy
+    networks:
+      - edge
     ports:
       - "127.0.0.1:4200:80"
 
@@ -165,9 +180,10 @@ services:
     image: rabbitmq:3.13-management-alpine
     container_name: ventas360-rabbitmq
     restart: unless-stopped
+    networks:
+      - backend
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "127.0.0.1:15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
@@ -193,8 +209,8 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       EUREKA_URL: http://service-registry:8761/eureka/
       EUREKA_INSTANCE_HOSTNAME: rabbit-mq
-    ports:
-      - "8084:8084"
+    networks:
+      - backend
     depends_on:
       service-registry:
         condition: service_healthy
@@ -213,7 +229,8 @@ services:
     container_name: ventas360-mail-carrier-consumer
     restart: unless-stopped
     entrypoint: ["python", "-m", "mail_carrier.amqp_consumer"]
-
+    networks:
+      - backend
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
@@ -233,3 +250,7 @@ services:
 
 volumes:
   ventas360-postgres-data:
+
+networks:
+  backend:
+  edge:
