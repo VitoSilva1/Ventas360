@@ -106,10 +106,18 @@ services:
       <<: *backend-environment
       SERVER_PORT: 8082
       EUREKA_INSTANCE_HOSTNAME: sales-service
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
     depends_on:
       postgres:
         condition: service_healthy
       service-registry:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      rabbit-mq:
         condition: service_healthy
     networks:
       - backend
@@ -128,9 +136,9 @@ services:
     container_name: ventas360-api-gateway
     restart: unless-stopped
     environment:
-      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:?GOOGLE_OAUTH_CLIENT_ID must be set}
       SERVER_PORT: 8080
       EUREKA_URL: http://service-registry:8761/eureka/
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:?GOOGLE_OAUTH_CLIENT_ID must be set}
     depends_on:
       service-registry:
         condition: service_healthy
@@ -166,7 +174,79 @@ services:
     networks:
       - edge
     ports:
-      - "127.0.0.1:8087:80"
+      - "127.0.0.1:4200:80"
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: ventas360-rabbitmq
+    restart: unless-stopped
+    networks:
+      - backend
+    ports:
+      - "127.0.0.1:15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  rabbit-mq:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      args:
+        SERVICE_DIR: rabbit-mq
+    container_name: ventas360-rabbit-mq
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8084
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      EUREKA_URL: http://service-registry:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: rabbit-mq
+    networks:
+      - backend
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health | grep -q UP"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  mail-carrier-consumer:
+    build:
+      context: backend/mail-carrier
+      dockerfile: Dockerfile
+    container_name: ventas360-mail-carrier-consumer
+    restart: unless-stopped
+    entrypoint: ["python", "-m", "mail_carrier.amqp_consumer"]
+    networks:
+      - backend
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_QUEUE: ventas360.mail.queue
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_APP_PASSWORD: ${SMTP_APP_PASSWORD:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Ventas360}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      rabbit-mq:
+        condition: service_healthy
 
 volumes:
   ventas360-postgres-data:

@@ -1,0 +1,24 @@
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
+rabbitmq:
+  ventas360:
+    exchange:
+      sales-fanout: ventas360.sales.fanout
+    queues:
+      sales: ventas360.sales.queue
+      mail: ventas360.mail.queue
+    dlx:
+      name: ventas360.dlx
+    dlq:
+      sales: ventas360.sales.dlq
+      mail: ventas360.mail.dlq
+
+eureka:
+  client:
+    enabled: false

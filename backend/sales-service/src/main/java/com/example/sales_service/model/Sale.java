@@ -37,6 +37,9 @@ public class Sale {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(unique = true)
+    private String saleEventId;
+
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SaleItem> items = new ArrayList<>();
 
@@ -82,5 +85,13 @@ public class Sale {
 
     public List<SaleItem> getItems() {
         return items;
+    }
+
+    public String getSaleEventId() {
+        return saleEventId;
+    }
+
+    public void setSaleEventId(String saleEventId) {
+        this.saleEventId = saleEventId;
     }
 }

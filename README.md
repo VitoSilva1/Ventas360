@@ -38,8 +38,9 @@ docker compose up --build
 
 La aplicación quedará disponible en:
 
-- Frontend: `http://localhost:8087` (o mediante el proxy HTTPS del servidor)
+- Frontend: `http://localhost:4200` (o mediante el proxy HTTPS del servidor)
 - API Gateway: `http://localhost:8080`
+- Consola de RabbitMQ: `http://localhost:15672` (usuario/contraseña por defecto: `guest`/`guest`)
 - Eureka, PostgreSQL y los microservicios no publican puertos en el host.
 
 Para detener los contenedores:
