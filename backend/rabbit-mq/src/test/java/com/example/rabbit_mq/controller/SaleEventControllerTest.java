@@ -24,13 +24,12 @@ class SaleEventControllerTest {
 
     private static final String VALID_BODY = """
         {
-          "saleId": 1,
-          "customerId": 2,
-          "total": "150.00",
-          "status": "COMPLETED",
-          "createdAt": "2026-01-01T10:00:00",
+          "saleId": "3f2b8c1e-9a4d-4e7b-8c2a-1d5e6f7a8b9c",
+          "customerId": null,
+          "customerEmail": "buyer@example.com",
+          "saleDate": "2026-01-01T10:00:00.000Z",
           "items": [
-            { "productId": 10, "quantity": 2, "unitPrice": "75.00", "subtotal": "150.00" }
+            { "productId": 10, "productName": "Keyboard", "quantity": 2, "unitPrice": 75.00 }
           ]
         }
         """;
@@ -49,15 +48,15 @@ class SaleEventControllerTest {
     void publishSaleEvent_nullSaleId_returns400() throws Exception {
         mockMvc.perform(post("/sales/events")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(VALID_BODY.replace("\"saleId\": 1,", "")))
+                .content(VALID_BODY.replace("\"saleId\": \"3f2b8c1e-9a4d-4e7b-8c2a-1d5e6f7a8b9c\",", "")))
             .andExpect(status().isBadRequest());
     }
 
     @Test
-    void publishSaleEvent_nullTotal_returns400() throws Exception {
+    void publishSaleEvent_nullSaleDate_returns400() throws Exception {
         mockMvc.perform(post("/sales/events")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(VALID_BODY.replace("\"total\": \"150.00\",", "")))
+                .content(VALID_BODY.replace("\"saleDate\": \"2026-01-01T10:00:00.000Z\",", "")))
             .andExpect(status().isBadRequest());
     }
 
@@ -65,15 +64,15 @@ class SaleEventControllerTest {
     void publishSaleEvent_emptyItems_returns400() throws Exception {
         mockMvc.perform(post("/sales/events")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(VALID_BODY.replace("\"items\": [\n    { \"productId\": 10, \"quantity\": 2, \"unitPrice\": \"75.00\", \"subtotal\": \"150.00\" }\n  ]", "\"items\": []")))
+                .content(VALID_BODY.replaceAll("(?s)\"items\": \\[.*?\\]", "\"items\": []")))
             .andExpect(status().isBadRequest());
     }
 
     @Test
-    void publishSaleEvent_nullStatus_returns400() throws Exception {
+    void publishSaleEvent_zeroQuantity_returns400() throws Exception {
         mockMvc.perform(post("/sales/events")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(VALID_BODY.replace("\"status\": \"COMPLETED\",", "")))
+                .content(VALID_BODY.replace("\"quantity\": 2", "\"quantity\": 0")))
             .andExpect(status().isBadRequest());
     }
 
