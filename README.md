@@ -38,10 +38,9 @@ docker compose up --build
 
 La aplicación quedará disponible en:
 
-- Frontend: `http://localhost:4200`
+- Frontend: `http://localhost:8087` (o mediante el proxy HTTPS del servidor)
 - API Gateway: `http://localhost:8080`
-- Eureka: `http://localhost:8761`
-- PostgreSQL: `localhost:5433`, base `Ventas360`
+- Eureka, PostgreSQL y los microservicios no publican puertos en el host.
 
 Para detener los contenedores:
 
@@ -68,3 +67,27 @@ backend/
 frontend/
 └── Angular
 ```
+
+## Autenticación y acceso a los servicios
+
+El API Gateway valida el ID token JWT de Google enviado en `Authorization: Bearer <token>`.
+Comprueba firma, vigencia, emisor, audiencia (`GOOGLE_OAUTH_CLIENT_ID`) y perfil con correo verificado.
+Todas las rutas requieren token excepto `POST /auth/google/sign-in`, `GET /actuator/health`,
+`GET /actuator/info` y solicitudes `OPTIONS`. Auth-service conserva su validación del mismo token.
+
+En Compose, productos, ventas, autenticación, Eureka y PostgreSQL solo están conectados a la
+red backend y no publican puertos. El frontend usa la red edge y accede al backend a través
+del Gateway. La red backend permite salida a Internet para obtener las claves de Google.
+Esto impide acceso externo directo por los puertos del host; el host Docker y los contenedores
+con acceso a la red backend deben ser de confianza. Ejecutar los servicios fuera de Compose
+requiere configurar por separado su firewall y acceso de red.
+
+Define `GOOGLE_OAUTH_CLIENT_ID` antes de iniciar. Para aplicar cambios en un despliegue Compose:
+
+```bash
+docker compose up -d --build
+```
+
+El cambio solo entra en vigor al recrear los contenedores. Los permisos por usuario o rol
+no se implementan con esta validación: cualquier usuario con un token aceptado puede acceder
+a las rutas protegidas, sujeto a las reglas de negocio de cada servicio.

@@ -33,3 +33,6 @@ coverage/
 *.tmp
 *.swp
 *.swo
+
+# Local Maven dependency cache
+.maven-cache/
