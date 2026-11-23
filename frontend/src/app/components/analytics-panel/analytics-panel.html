@@ -1,0 +1,56 @@
+<section class="analytics-panel" id="analitica" aria-labelledby="analytics-title">
+  <div class="analytics-heading">
+    <div>
+      <p class="eyebrow">Streaming con Kafka</p>
+      <h2 id="analytics-title">Analitica de ventas</h2>
+    </div>
+    <button class="refresh-button" type="button" [disabled]="loading()" (click)="refresh.emit()">
+      @if (loading()) { <span class="spinner" aria-hidden="true"></span> Actualizando } @else { Actualizar }
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="analytics-error">{{ error() }}</div>
+  } @else if (!summary() && loading()) {
+    <div class="analytics-empty">Cargando analitica desde analytics-service...</div>
+  } @else if (summary(); as data) {
+    <div class="analytics-metrics">
+      <article><span>Ventas procesadas</span><strong>{{ data.totalSales }}</strong></article>
+      <article><span>Ingresos totales</span><strong>{{ data.totalRevenue | currency:'CLP':'symbol':'1.0-0' }}</strong></article>
+      <article><span>Ticket promedio</span><strong>{{ data.averageTicket | currency:'CLP':'symbol':'1.0-0' }}</strong></article>
+      <article><span>Ingresos de hoy</span><strong>{{ data.revenueToday | currency:'CLP':'symbol':'1.0-0' }}</strong></article>
+    </div>
+
+    <div class="analytics-columns">
+      <div>
+        <h3>Productos mas vendidos</h3>
+        @if (data.topProducts.length === 0) {
+          <p class="analytics-muted">Aun no hay ventas procesadas.</p>
+        } @else {
+          <ol class="top-products">
+            @for (product of data.topProducts; track product.productId) {
+              <li>
+                <span>{{ product.name }}</span>
+                <span>{{ product.unitsSold }} u.</span>
+                <strong>{{ product.revenue | currency:'CLP':'symbol':'1.0-0' }}</strong>
+              </li>
+            }
+          </ol>
+        }
+      </div>
+      <div>
+        <h3>Stock bajo</h3>
+        @if (data.lowStock.length === 0) {
+          <p class="analytics-muted">Ningun producto con stock bajo.</p>
+        } @else {
+          <ul class="low-stock">
+            @for (product of data.lowStock; track product.productId) {
+              <li><span>{{ product.name }}</span><strong>{{ product.stock }} u.</strong></li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+    <p class="analytics-muted generated">Actualizado {{ data.generatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+  }
+</section>

@@ -36,7 +36,7 @@ Requirements quoted verbatim from `EP5_DSY1107_Estudiante_encargo.pdf`:
 | T4 | S5, S6, S8 (inventory consumer) | inline | done | see T4 commit. product-service 13/13 (InventoryServiceTest 5: decrement, idempotent, clamp at 0, unknown product skipped, UPDATED event; EmbeddedKafka: stock decremented via inventory-group, invalid payload -> .DLT); sales-service 18/18 after max.block.ms change |
 | T5 | S9 (kafka-admin) | inline | done | see T5 commit. kafka-admin 15/15 (EmbeddedKafka: create/list/describe/configs set+delete/increase partitions/delete incl. internal+missing protection; consumer group lag, reset offsets, delete; MockMvc: 201/400/409/204). api-gateway 11/11 incl. new test: /analytics/** and /kafka-admin/** (GET, POST, DELETE) return 401 without token |
 | T6 | S10 (ECS logging across Kafka services) | inline | done (runtime ECS output pending e2e) | see T6 commit. KafkaMdcRecordInterceptor tests 2/2 in analytics and product; analytics 10/10, product 17/17 |
-| T7 | S11 | inline | todo | |
+| T7 | S11 | inline | done | see T7 commit. No frontend test runner exists (pre-existing: no test target, no specs), so evidence is `ng build` dev + prod OK with no budget warnings |
 | T8 | S12 | inline | todo | |
 
 Risk notes:

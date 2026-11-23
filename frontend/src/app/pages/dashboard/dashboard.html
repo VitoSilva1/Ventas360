@@ -26,6 +26,14 @@
       <article class="metric-card"><div class="metric-icon orange">&#9638;</div><div><span>Productos activos</span><strong>{{ activeProducts() }}</strong><small>Catalogo actual</small></div></article>
     </section>
 
+    <!-- Analitica alimentada por Kafka (analytics-service) -->
+    <app-analytics-panel
+      [summary]="analytics()"
+      [loading]="analyticsLoading()"
+      [error]="analyticsError()"
+      (refresh)="loadAnalytics()">
+    </app-analytics-panel>
+
     <!-- Catalogo de productos -->
     <section class="section-heading" id="productos">
       <div><p class="eyebrow">Catalogo</p><h2>Productos destacados</h2></div>
