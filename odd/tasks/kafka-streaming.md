@@ -37,7 +37,7 @@ Requirements quoted verbatim from `EP5_DSY1107_Estudiante_encargo.pdf`:
 | T5 | S9 (kafka-admin) | inline | done | see T5 commit. kafka-admin 15/15 (EmbeddedKafka: create/list/describe/configs set+delete/increase partitions/delete incl. internal+missing protection; consumer group lag, reset offsets, delete; MockMvc: 201/400/409/204). api-gateway 11/11 incl. new test: /analytics/** and /kafka-admin/** (GET, POST, DELETE) return 401 without token |
 | T6 | S10 (ECS logging across Kafka services) | inline | done (runtime ECS output pending e2e) | see T6 commit. KafkaMdcRecordInterceptor tests 2/2 in analytics and product; analytics 10/10, product 17/17 |
 | T7 | S11 | inline | done | see T7 commit. No frontend test runner exists (pre-existing: no test target, no specs), so evidence is `ng build` dev + prod OK with no budget warnings |
-| T8 | S12 | inline | todo | |
+| T8 | S12 | inline | done | see T8 commit. README Kafka section (flow, topics table, groups, errors, admin endpoints, run commands) and ENVIRONMENT_VARIABLES.md. .env.example not touched: reading it is blocked by a deny rule and no new required variable exists (compose sets KAFKA_BOOTSTRAP_SERVERS) |
 
 Risk notes:
 - T1 changes delivery infra (high-risk item 5).
