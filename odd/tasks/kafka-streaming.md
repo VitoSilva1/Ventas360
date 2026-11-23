@@ -114,3 +114,10 @@ Risk notes:
   - sales-service had `logging.structured.format: ecs`, which is not the Spring Boot property name. Whether it produced JSON before is unverified; it will be checked in the e2e run.
   - A `KafkaMdcRecordInterceptor` (a `RecordInterceptor` bean, auto-wired by Boot into the listener container factory) puts `kafka.topic`, `kafka.partition`, `kafka.offset` and `kafka.key` into the MDC for every consumed record and removes only those keys in `afterRecord`.
   - Test yamls shadow the main yamls, so test output stays plain text.
+- **L13 (e2e, 2026-11-23)**:
+  - Stack: real 3-broker cluster + Postgres + RabbitMQ + rabbit-mq/sales/product/analytics/kafka-admin, running prebuilt jars through a scratchpad compose override (Eureka disabled, services called directly; the gateway needs an interactive Google token).
+  - **Sale flow**: a sale posted to `rabbit-mq /sales/events` was persisted by sales-service and published to Kafka. inventory-group decremented stock (Notebook 10→8, Teclado 25→24) and emitted UPDATED events. analytics-group recorded the sale (1 sale, revenue 1289970) with catalog names.
+  - **Consumer groups**: kafka-admin showed both groups Stable, 3 consumers each, lag 0.
+  - **Poison message**: `{not-json` was routed to `ventas360.sales.completed.DLT` once per group, with `original-consumer-group` headers. Lag stayed 0.
+  - **Logs**: ECS JSON with a `kafka{topic,partition,offset,key}` block, including lines from the domain `InventoryService`. sales-service now logs ECS JSON (its previous output was not checked).
+  - **Kafka outage** (all brokers stopped): the RabbitMQ sale was still persisted, `ventas360.sales.dlq` stayed at 0, and the "not published" error was logged. Brokers were then restarted healthy.
