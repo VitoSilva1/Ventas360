@@ -4,6 +4,8 @@ x-backend-environment: &backend-environment
   SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/Ventas360
   EUREKA_URL: http://service-registry:8761/eureka/
   EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+  # Brokers defined in docker-compose.kafka.yml (same "backend" network).
+  KAFKA_BOOTSTRAP_SERVERS: kafka-1:29092,kafka-2:29092,kafka-3:29092
 
 services:
   postgres:

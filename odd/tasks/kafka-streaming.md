@@ -1,6 +1,6 @@
 # Feature: Kafka streaming and analytics (EP5 DSY1107)
 
-Objective: add Kafka (Zookeeper + 3 brokers + Kafka-UI) as an analytics event stream that complements RabbitMQ without changing it. Branch: `feature/kafka-streaming` (builds on a teammate's commit 0e48e2d). Delivery: `ask-on-risk`, chained PRs (~4 slices). Test runner: `./mvnw test` per service, run inside `maven:3.9-temurin-21` via Docker (no local JDK).
+Objective: add Kafka (Zookeeper + 3 brokers + Kafka-UI) as an analytics event stream that complements RabbitMQ without changing it. Branch: `feature/kafka-streaming` (builds on a teammate's commit 0e48e2d). Delivery: `ask-on-risk`, chained PRs (~4 slices). Test runner: `./mvnw test` per service, run inside `maven:3.9-eclipse-temurin-21` via Docker (no local JDK).
 
 ## Specs
 
@@ -30,8 +30,8 @@ Requirements quoted verbatim from `EP5_DSY1107_Estudiante_encargo.pdf`:
 
 | ID | Specs | Route | Status | Commit / evidence |
 |---|---|---|---|---|
-| T1 | S1, S7 | inline | written, uncommitted; blocked on Docker for `docker compose config` + `make kafka-up` + `make kafka-topics` | files: docker-compose.kafka.yml, docker/kafka/create-topics.sh, Makefile, .gitattributes |
-| T2 | S2, S3, S4, S10 (producers) | inline | todo | |
+| T1 | S1, S7 | inline | done | fdc35f6. Verified: compose config OK; 3 brokers + ZK healthy; 4 topics with RF3 and expected configs; Kafka-UI online (3 brokers, 12 partitions). RDD: high, consent declined by user |
+| T2 | S2, S3, S4, S10 (producers) | inline | done | see T2 commit. sales-service 18/18, product-service 6/6 (incl. EmbeddedKafka round-trip). RED not observed separately: tests and code compiled in the same first run |
 | T3 | S5, S6, S8, S10 (analytics-service) | inline | todo | |
 | T4 | S5, S6, S8 (inventory consumer) | inline | todo | |
 | T5 | S9 (kafka-admin) | inline | todo | |
@@ -49,7 +49,7 @@ Risk notes:
 - **L1 (2026-11-23, user)**: "Si, entregado a tus recomendaciones. Mis compas me abandonaron y de kafka se lo justo. Te sigo. Te aviso cuando Docker Desktop este instalado"
   - Recommendations accepted: a new analytics-service; two separate ODD cycles (Kafka here, RabbitMQ leftovers later); ECS contextual logging; no ELK stack.
 - **L2**: Found the teammate branch `origin/feature/kafka-streaming` (commit 0e48e2d). It has a single KRaft broker and no Zookeeper, which does not meet S1. Work continues on that branch.
-- **L3**: The environment has no JDK and Docker is not installed yet. Maven verification will run in a Docker `maven:3.9-temurin-21` container once Docker Desktop is available.
+- **L3**: The environment has no JDK and Docker is not installed yet. Maven verification will run in a Docker `maven:3.9-eclipse-temurin-21` container once Docker Desktop is available.
 - **L4 (T1 decisions)**:
   - Confluent `cp-zookeeper`/`cp-kafka` 7.7.1 (Kafka 3.7) are used because Kafka 4.x dropped Zookeeper.
   - Brokers use an INTERNAL listener on 29092 (Docker network) and EXTERNAL listeners on localhost:9092, 9093 and 9094.
@@ -62,3 +62,11 @@ Risk notes:
   - Use the Jackson 3 classes: `JacksonJsonSerializer`/`JacksonJsonDeserializer` replace the deprecated `JsonSerializer`/`JsonDeserializer`, and `DefaultJacksonJavaTypeMapper` replaces `DefaultJackson2JavaTypeMapper`.
   - DTOs live in different packages per service. Producers will use `noTypeInfo()`; consumers will use `ignoreTypeHeaders()` with a fixed target type, wrapped in `ErrorHandlingDeserializer` so a poison payload goes to the DLT instead of blocking the partition.
   - Compile in Docker before committing.
+- **L6 (T2 decisions)**:
+  - sales-service publishes `SaleCompletedEvent` (key = sale DB id) synchronously from the RabbitMQ listener. A Kafka failure propagates, RabbitMQ retries, and the duplicate branch re-publishes the stored sale (at-least-once without an outbox).
+  - `POST /sales` publishes asynchronously and logs failures, so a committed sale never becomes a 500.
+  - product-service raises a `ProductChangedEvent` domain event, relayed by `@TransactionalEventListener(AFTER_COMMIT)`. Key = productId; CREATED/UPDATED/DELETED.
+  - Kafka client config lives in `kafka.yaml`, imported by the main and test `application.yaml`, because the test `application.yaml` shadows the main one.
+  - `rocksdbjni` (~72 MB, Kafka Streams only) is excluded from `spring-boot-starter-kafka-test`.
+  - The network here is ~65 KB/s, so Maven runs use the `ventas360-m2` volume plus `-Daether.connector.http.retryHandler.count=5`.
+  - Pending follow-up (pre-existing): `SaleEventConsumerService` sets `saleEventId` in a second save after `create()` commits, so it is not atomic.

@@ -1,0 +1,28 @@
+# Kafka client configuration for sales-service (producer of ventas360.sales.completed).
+# Imported by application.yaml (main and test) so both use the same settings.
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092,localhost:9093,localhost:9094}
+    client-id: sales-service
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      # Wait for every in-sync replica (min.insync.replicas=2 on the topic) before confirming.
+      acks: all
+      compression-type: lz4
+      batch-size: 16384
+      properties:
+        # Idempotent producer: the broker drops duplicates of retried sends and keeps order per partition.
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        linger.ms: 5
+        request.timeout.ms: 15000
+        delivery.timeout.ms: 30000
+        # Plain JSON without Java type headers: consumers in other services map it to their own DTOs.
+        spring.json.add.type.headers: false
+
+ventas360:
+  kafka:
+    topics:
+      sales-completed: ventas360.sales.completed
+    send-timeout: 10s

@@ -7,7 +7,11 @@ import ch.qos.logback.core.read.ListAppender;
 import com.example.sales_service.dto.SaleEventDto;
 import com.example.sales_service.dto.SaleEventItemDto;
 import com.example.sales_service.dto.SaleResponse;
+import com.example.sales_service.dto.SaleCompletedEvent;
+import com.example.sales_service.messaging.kafka.KafkaPublishException;
+import com.example.sales_service.messaging.kafka.SaleCompletedPublisher;
 import com.example.sales_service.repository.SaleRepository;
+import org.mockito.ArgumentCaptor;
 import com.example.sales_service.service.SaleService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +32,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +45,9 @@ class SaleEventConsumerServiceUnitTest {
 
     @Mock
     private SaleRepository saleRepository;
+
+    @Mock
+    private SaleCompletedPublisher saleCompletedPublisher;
 
     @InjectMocks
     private SaleEventConsumerService saleEventConsumerService;
@@ -94,6 +104,54 @@ class SaleEventConsumerServiceUnitTest {
                 e.getLevel() == Level.INFO && e.getFormattedMessage().toLowerCase().contains("received"));
         assertThat(listAppender.list).anyMatch(e ->
                 e.getLevel() == Level.INFO && e.getFormattedMessage().toLowerCase().contains("success"));
+    }
+
+    @Test
+    void consume_newEvent_publishesSaleCompletedEventToKafka() {
+        UUID saleId = UUID.randomUUID();
+        SaleResponse created = new SaleResponse(99L, 1L, BigDecimal.TEN, null, LocalDateTime.now(), List.of());
+        when(saleRepository.existsBySaleEventId(saleId.toString())).thenReturn(false);
+        when(saleService.create(any())).thenReturn(created);
+
+        saleEventConsumerService.consume(buildEvent(saleId));
+
+        ArgumentCaptor<SaleCompletedEvent> captor = ArgumentCaptor.forClass(SaleCompletedEvent.class);
+        verify(saleCompletedPublisher).publishAndWait(captor.capture());
+        assertThat(captor.getValue().saleId()).isEqualTo(99L);
+        assertThat(captor.getValue().saleEventId()).isEqualTo(saleId.toString());
+    }
+
+    @Test
+    void consume_duplicateEvent_republishesStoredSaleSoKafkaIsNotMissed() {
+        UUID saleId = UUID.randomUUID();
+        SaleResponse stored = new SaleResponse(99L, 1L, BigDecimal.TEN, null, LocalDateTime.now(), List.of());
+        when(saleRepository.existsBySaleEventId(saleId.toString())).thenReturn(true);
+        when(saleService.findBySaleEventId(saleId.toString())).thenReturn(Optional.of(stored));
+
+        saleEventConsumerService.consume(buildEvent(saleId));
+
+        verify(saleService, never()).create(any());
+        verify(saleCompletedPublisher).publishAndWait(any());
+    }
+
+    @Test
+    void consume_kafkaPublishFails_propagatesSoRabbitRetries() {
+        UUID saleId = UUID.randomUUID();
+        SaleResponse created = new SaleResponse(99L, 1L, BigDecimal.TEN, null, LocalDateTime.now(), List.of());
+        when(saleRepository.existsBySaleEventId(saleId.toString())).thenReturn(false);
+        when(saleService.create(any())).thenReturn(created);
+        doThrow(new KafkaPublishException("broker down", null))
+                .when(saleCompletedPublisher).publishAndWait(any());
+
+        assertThrows(KafkaPublishException.class, () -> saleEventConsumerService.consume(buildEvent(saleId)));
+    }
+
+    private static SaleEventDto buildEvent(UUID saleId) {
+        return new SaleEventDto(
+                saleId, 1L, "test@example.com",
+                LocalDateTime.now(),
+                List.of(new SaleEventItemDto(10L, "Product", 1, new BigDecimal("10.00")))
+        );
     }
 
     @Test

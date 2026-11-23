@@ -1,6 +1,8 @@
 package com.example.sales_service.controller;
 
+import com.example.sales_service.dto.SaleCompletedEvent;
 import com.example.sales_service.dto.SaleRequest;
+import com.example.sales_service.messaging.kafka.SaleCompletedPublisher;
 import com.example.sales_service.dto.SaleResponse;
 import com.example.sales_service.service.SaleService;
 import jakarta.validation.Valid;
@@ -25,9 +27,11 @@ import java.util.List;
 public class SaleController {
 
     private final SaleService saleService;
+    private final SaleCompletedPublisher saleCompletedPublisher;
 
-    public SaleController(SaleService saleService) {
+    public SaleController(SaleService saleService, SaleCompletedPublisher saleCompletedPublisher) {
         this.saleService = saleService;
+        this.saleCompletedPublisher = saleCompletedPublisher;
     }
 
     @GetMapping
@@ -42,6 +46,9 @@ public class SaleController {
 
     @PostMapping
     public ResponseEntity<SaleResponse> create(@Valid @RequestBody SaleRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(saleService.create(request));
+        SaleResponse created = saleService.create(request);
+        // The sale is already committed: a Kafka outage is logged, never turned into a 500.
+        saleCompletedPublisher.publishAsync(SaleCompletedEvent.from(created, null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 }
