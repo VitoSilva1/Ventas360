@@ -25,7 +25,7 @@ public record SaleCompletedEvent(
         String status,
         LocalDateTime createdAt,
         Instant publishedAt,
-        @NotEmpty List<@Valid SaleCompletedItem> items
+        @NotEmpty List<@NotNull @Valid SaleCompletedItem> items
 ) {
     public record SaleCompletedItem(
             @NotNull Long productId,

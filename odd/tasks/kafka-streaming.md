@@ -86,3 +86,9 @@ Risk notes:
   - Error handling mirrors analytics (`.DLT` resolver). The DLT producer is private to the config so it does not replace the auto-configured `KafkaTemplate` used by the relay.
   - Resilience fix to T2 producers: `max.block.ms=5000` (the default of 60s would block HTTP or RabbitMQ threads while Kafka is down).
   - The test yaml disables listener auto-startup; listener tests re-enable it with an embedded broker.
+- **L9 (independent verification of T1 + T4)**:
+  - S1, S6, S7 and S8 pass on the live cluster: topic configs match, `kafka-topics-init` is idempotent, `.sh` is LF, compose config is valid.
+  - **Blocker (fixed):** the same sale delivered concurrently decremented stock several times. Verifier probe: 980 instead of 995. Cause: `save()` with an assigned `@Id` merges, so the PK never fires against an already-committed marker. Fix: `ProcessedSale implements Persistable` (`isNew()==true`), plus a regression test with 6 threads. RED was observed by the verifier's probe; the regression test itself was written together with the fix.
+  - **Advisory (fixed):** `List<@Valid Item>` accepted null elements, which caused an NPE and 3 retries before the DLT. Now `List<@NotNull @Valid ...>` in product and analytics.
+  - **Advisory (fixed, supersedes part of L6):** the synchronous Kafka publish made a Kafka outage push completed RabbitMQ sales to the RabbitMQ DLQ (not an endless redelivery: the config uses `RejectAndDontRequeueRecoverer`). That conflicts with the constraint "sin afectar las integraciones previas con RabbitMQ". The consumer now logs the Kafka failure and acks. Trade-off: the event is lost while Kafka is down; a RabbitMQ redelivery still re-publishes it.
+  - Advisories left open: `--if-not-exists` never updates the settings of existing topics (document in T8; use kafka-admin to change them); no compose `depends_on` on the brokers (producers log until they are up).

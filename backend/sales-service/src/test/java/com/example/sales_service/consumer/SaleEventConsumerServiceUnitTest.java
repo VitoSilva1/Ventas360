@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -135,7 +136,8 @@ class SaleEventConsumerServiceUnitTest {
     }
 
     @Test
-    void consume_kafkaPublishFails_propagatesSoRabbitRetries() {
+    void consume_kafkaPublishFails_saleIsStillPersistedAndRabbitMessageIsNotFailed() {
+        // Kafka must not affect the existing RabbitMQ integration (EP5 constraint).
         UUID saleId = UUID.randomUUID();
         SaleResponse created = new SaleResponse(99L, 1L, BigDecimal.TEN, null, LocalDateTime.now(), List.of());
         when(saleRepository.existsBySaleEventId(saleId.toString())).thenReturn(false);
@@ -143,7 +145,11 @@ class SaleEventConsumerServiceUnitTest {
         doThrow(new KafkaPublishException("broker down", null))
                 .when(saleCompletedPublisher).publishAndWait(any());
 
-        assertThrows(KafkaPublishException.class, () -> saleEventConsumerService.consume(buildEvent(saleId)));
+        assertDoesNotThrow(() -> saleEventConsumerService.consume(buildEvent(saleId)));
+
+        verify(saleService).create(any());
+        assertThat(listAppender.list).anyMatch(e ->
+                e.getLevel() == Level.ERROR && e.getFormattedMessage().contains("Kafka event was not published"));
     }
 
     private static SaleEventDto buildEvent(UUID saleId) {

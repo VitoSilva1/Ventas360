@@ -92,6 +92,46 @@ class InventoryServiceTest {
                 });
     }
 
+    @Test
+    void applySale_sameSaleDeliveredConcurrently_decrementsOnlyOnce() throws Exception {
+        // Regression: overlapping redelivery (e.g. during a rebalance) of the same sale.
+        Long productId = productRepository.save(new Product("Tablet", null, new BigDecimal("1"), 1000, true)).getId();
+        int threads = 6;
+        var start = new java.util.concurrent.CountDownLatch(1);
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(threads);
+        try {
+            List<java.util.concurrent.Future<?>> calls = new java.util.ArrayList<>();
+            for (int i = 0; i < threads; i++) {
+                calls.add(pool.submit(() -> {
+                    start.await();
+                    try {
+                        return inventoryService.applySale(sale(777L, item(productId, 5)));
+                    } catch (RuntimeException duplicateKey) {
+                        // What the Kafka error handler does: retry; the retry must see the sale as applied.
+                        return inventoryService.applySale(sale(777L, item(productId, 5)));
+                    }
+                }));
+            }
+            start.countDown();
+            for (var call : calls) {
+                call.get(30, java.util.concurrent.TimeUnit.SECONDS);
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+
+        assertThat(stockOf(productId)).isEqualTo(995);
+        assertThat(processedSaleRepository.existsById(777L)).isTrue();
+    }
+
+    @Test
+    void validation_rejectsNullItemInsideList() {
+        var validator = jakarta.validation.Validation.buildDefaultValidatorFactory().getValidator();
+        var sale = new SaleCompletedEvent(8L, java.util.Arrays.asList(item(mouseId, 1), null));
+
+        assertThat(validator.validate(sale)).isNotEmpty();
+    }
+
     private int stockOf(Long id) {
         return productRepository.findById(id).orElseThrow().getStock();
     }

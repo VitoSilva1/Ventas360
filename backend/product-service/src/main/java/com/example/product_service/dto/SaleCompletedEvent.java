@@ -15,7 +15,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SaleCompletedEvent(
         @NotNull Long saleId,
-        @NotEmpty List<@Valid Item> items
+        @NotEmpty List<@NotNull @Valid Item> items
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Item(
