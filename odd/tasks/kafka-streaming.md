@@ -34,7 +34,7 @@ Requirements quoted verbatim from `EP5_DSY1107_Estudiante_encargo.pdf`:
 | T2 | S2, S3, S4, S10 (producers) | inline | done | see T2 commit. sales-service 18/18, product-service 6/6 (incl. EmbeddedKafka round-trip). RED not observed separately: tests and code compiled in the same first run |
 | T3 | S5, S6, S8, S10 (analytics-service) | inline | done | see T3 commit. analytics-service 8/8 (domain + EmbeddedKafka: both topics consumed, malformed JSON and invalid payload land in .DLT without blocking later events); api-gateway 10/10 after adding /analytics/** route. RED observed: DLT tests failed first (Spring Kafka 4 default "-dlt" suffix), fixed with explicit resolver |
 | T4 | S5, S6, S8 (inventory consumer) | inline | done | see T4 commit. product-service 13/13 (InventoryServiceTest 5: decrement, idempotent, clamp at 0, unknown product skipped, UPDATED event; EmbeddedKafka: stock decremented via inventory-group, invalid payload -> .DLT); sales-service 18/18 after max.block.ms change |
-| T5 | S9 (kafka-admin) | inline | todo | |
+| T5 | S9 (kafka-admin) | inline | done | see T5 commit. kafka-admin 15/15 (EmbeddedKafka: create/list/describe/configs set+delete/increase partitions/delete incl. internal+missing protection; consumer group lag, reset offsets, delete; MockMvc: 201/400/409/204). api-gateway 11/11 incl. new test: /analytics/** and /kafka-admin/** (GET, POST, DELETE) return 401 without token |
 | T6 | S10 (ECS logging across Kafka services) | inline | todo | |
 | T7 | S11 | inline | todo | |
 | T8 | S12 | inline | todo | |
@@ -92,3 +92,12 @@ Risk notes:
   - **Advisory (fixed):** `List<@Valid Item>` accepted null elements, which caused an NPE and 3 retries before the DLT. Now `List<@NotNull @Valid ...>` in product and analytics.
   - **Advisory (fixed, supersedes part of L6):** the synchronous Kafka publish made a Kafka outage push completed RabbitMQ sales to the RabbitMQ DLQ (not an endless redelivery: the config uses `RejectAndDontRequeueRecoverer`). That conflicts with the constraint "sin afectar las integraciones previas con RabbitMQ". The consumer now logs the Kafka failure and acks. Trade-off: the event is lost while Kafka is down; a RabbitMQ redelivery still re-publishes it.
   - Advisories left open: `--if-not-exists` never updates the settings of existing topics (document in T8; use kafka-admin to change them); no compose `depends_on` on the brokers (producers log until they are up).
+- **L10 (T5 decisions)**:
+  - The new `kafka-admin` service (port 8086) wraps a single Kafka `Admin` client bean.
+  - Endpoints under `/kafka-admin`:
+    - cluster info;
+    - topics: list, describe (partitions with leader/replicas/ISR, plus only the topic-level overrides), create with configs, PATCH configs (incremental SET/DELETE), increase partitions, delete (internal `__*` topics are protected);
+    - consumer groups: list, describe (members, committed vs end offset, lag per partition and total), reset offsets to EARLIEST/LATEST (only when the group is EMPTY, otherwise 409), delete.
+  - Kafka errors map to 400/404/409/503/502 ProblemDetails, and every call is bounded by `ventas360.kafka-admin.timeout`. Mutations are logged at INFO/WARN as an audit trail.
+  - Gateway route `/kafka-admin/**`, JWT protected; the gateway test proves 401 for GET/POST/DELETE without a token. The service is not published on the host (backend network only).
+  - Gotcha: `InvalidTopicException` extends `InvalidConfigurationException`, so a separate pattern-switch case does not compile (dominated label).

@@ -26,6 +26,10 @@ spring:
               uri: lb://analytics-service
               predicates:
                 - Path=/analytics/**
+            - id: kafka-admin
+              uri: lb://kafka-admin
+              predicates:
+                - Path=/kafka-admin/**
 
 google:
   oauth:

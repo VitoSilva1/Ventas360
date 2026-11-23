@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: kafka-admin
+
+eureka:
+  client:
+    enabled: false
+
+ventas360:
+  kafka-admin:
+    timeout: 10s

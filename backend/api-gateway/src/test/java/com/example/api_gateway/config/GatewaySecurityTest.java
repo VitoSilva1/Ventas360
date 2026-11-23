@@ -35,7 +35,8 @@ class GatewaySecurityTest {
     @RestController
     static class ProbeController {
         @RequestMapping({"/products", "/sales", "/auth/logout", "/future-route",
-                "/auth/google/sign-in", "/actuator/health"})
+                "/auth/google/sign-in", "/actuator/health",
+                "/analytics/summary", "/kafka-admin/topics", "/kafka-admin/topics/ventas360.sales.completed"})
         String probe() { return "ok"; }
     }
 
@@ -46,6 +47,19 @@ class GatewaySecurityTest {
             mockMvc.perform(get(path).header("Authorization", "Bearer " + TestConfiguration.token(Map.of())))
                     .andExpect(status().isOk());
         }
+    }
+
+    @Test
+    void kafkaRoutesRequireTokenIncludingDestructiveAdminOperations() throws Exception {
+        mockMvc.perform(get("/analytics/summary")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/kafka-admin/topics")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/kafka-admin/topics")).andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/kafka-admin/topics/ventas360.sales.completed")).andExpect(status().isUnauthorized());
+
+        String bearer = "Bearer " + TestConfiguration.token(Map.of());
+        mockMvc.perform(get("/analytics/summary").header("Authorization", bearer)).andExpect(status().isOk());
+        mockMvc.perform(delete("/kafka-admin/topics/ventas360.sales.completed").header("Authorization", bearer))
+                .andExpect(status().isOk());
     }
 
     @Test

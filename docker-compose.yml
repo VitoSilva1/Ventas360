@@ -154,6 +154,31 @@ services:
       timeout: 5s
       retries: 30
 
+  kafka-admin:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      args:
+        SERVICE_DIR: kafka-admin
+    container_name: ventas360-kafka-admin
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8086
+      EUREKA_URL: http://service-registry:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: kafka-admin
+      KAFKA_BOOTSTRAP_SERVERS: kafka-1:29092,kafka-2:29092,kafka-3:29092
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health | grep -q UP"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
   api-gateway:
     build:
       context: .
