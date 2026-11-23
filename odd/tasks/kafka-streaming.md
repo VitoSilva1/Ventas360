@@ -32,7 +32,7 @@ Requirements quoted verbatim from `EP5_DSY1107_Estudiante_encargo.pdf`:
 |---|---|---|---|---|
 | T1 | S1, S7 | inline | done | fdc35f6. Verified: compose config OK; 3 brokers + ZK healthy; 4 topics with RF3 and expected configs; Kafka-UI online (3 brokers, 12 partitions). RDD: high, consent declined by user |
 | T2 | S2, S3, S4, S10 (producers) | inline | done | see T2 commit. sales-service 18/18, product-service 6/6 (incl. EmbeddedKafka round-trip). RED not observed separately: tests and code compiled in the same first run |
-| T3 | S5, S6, S8, S10 (analytics-service) | inline | todo | |
+| T3 | S5, S6, S8, S10 (analytics-service) | inline | done | see T3 commit. analytics-service 8/8 (domain + EmbeddedKafka: both topics consumed, malformed JSON and invalid payload land in .DLT without blocking later events); api-gateway 10/10 after adding /analytics/** route. RED observed: DLT tests failed first (Spring Kafka 4 default "-dlt" suffix), fixed with explicit resolver |
 | T4 | S5, S6, S8 (inventory consumer) | inline | todo | |
 | T5 | S9 (kafka-admin) | inline | todo | |
 | T6 | S10 (ECS logging across Kafka services) | inline | todo | |
@@ -70,3 +70,11 @@ Risk notes:
   - `rocksdbjni` (~72 MB, Kafka Streams only) is excluded from `spring-boot-starter-kafka-test`.
   - The network here is ~65 KB/s, so Maven runs use the `ventas360-m2` volume plus `-Daether.connector.http.retryHandler.count=5`.
   - Pending follow-up (pre-existing): `SaleEventConsumerService` sets `saleEventId` in a second save after `create()` commits, so it is not atomic.
+- **L7 (T3 decisions)**:
+  - The new `analytics-service` (port 8085) persists its read model in Postgres (`analytics_sales`, `analytics_sale_lines`, `analytics_catalog_products`). With shared storage, instances in `analytics-group` split partitions and still return a complete summary.
+  - Top products are a `GROUP BY` over sale lines (no counters, so no lost updates). Idempotency comes from the PK = sales-service sale id.
+  - Two `@KafkaListener` adapters, each with concurrency 3 (one consumer per partition), validate payloads with Jakarta Validation and delegate to `AnalyticsService`, which has no Kafka types.
+  - Consumer config: `ErrorHandlingDeserializer` wrapping `JacksonJsonDeserializer` (no type headers; a per-listener default type), `CooperativeStickyAssignor`, manual commits (`ack-mode: record`), `earliest`.
+  - Error handling: `DefaultErrorHandler` with exponential backoff (0.5s x2, 3 attempts) and retry logs. `InvalidEventException` and `DeserializationException` are not retried. The recoverer logs the error and publishes to `<topic>.DLT` on the same partition, using a `DelegatingByTypeSerializer` (`byte[]` or JSON).
+  - **Gotcha**: Spring Kafka 4's `DeadLetterPublishingRecoverer` defaults to the `-dlt` suffix, so an explicit resolver is required (saved to Engram).
+  - Gateway route `/analytics/**` → `lb://analytics-service` (JWT protected like the rest). Compose service `analytics-service` was added.

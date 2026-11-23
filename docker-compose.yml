@@ -129,6 +129,31 @@ services:
       timeout: 5s
       retries: 30
 
+  analytics-service:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      args:
+        SERVICE_DIR: analytics-service
+    container_name: ventas360-analytics-service
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      SERVER_PORT: 8085
+      EUREKA_INSTANCE_HOSTNAME: analytics-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health | grep -q UP"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
   api-gateway:
     build:
       context: .

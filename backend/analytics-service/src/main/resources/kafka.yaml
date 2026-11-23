@@ -1,0 +1,38 @@
+# Kafka client configuration for analytics-service (consumer of both Ventas360 topics).
+# Imported by application.yaml (main and test) so both use the same settings.
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092,localhost:9093,localhost:9094}
+    client-id: analytics-service
+    consumer:
+      group-id: ${ventas360.kafka.consumer-group}
+      # A new group starts from the beginning: replays the compacted catalog and retained sales.
+      auto-offset-reset: earliest
+      # Offsets are committed by the listener container after each record is processed.
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # Wraps the JSON deserializer: a malformed payload becomes an error routed to the DLT
+      # instead of an exception that would make the consumer loop on the same offset forever.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      max-poll-records: 100
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+        # Producers send plain JSON; each listener sets its own target type (spring.json.value.default.type).
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: com.example.analytics_service.dto
+        # Cooperative rebalancing: adding a second instance moves partitions without stopping the others.
+        partition.assignment.strategy: org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+        session.timeout.ms: 15000
+        heartbeat.interval.ms: 3000
+        max.poll.interval.ms: 300000
+        isolation.level: read_committed
+    listener:
+      # Commit after every successfully processed record.
+      ack-mode: record
+
+ventas360:
+  kafka:
+    consumer-group: analytics-group
+    topics:
+      sales-completed: ventas360.sales.completed
+      product-events: ventas360.product.events
