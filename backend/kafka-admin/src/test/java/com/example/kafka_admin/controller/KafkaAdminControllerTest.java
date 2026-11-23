@@ -57,6 +57,17 @@ class KafkaAdminControllerTest {
     }
 
     @Test
+    void createTopic_replicationFactorAboveShortRange_returns400() throws Exception {
+        // Regression (T5 verification A4): 65535 used to wrap to -1 ("broker default").
+        mockMvc.perform(post("/kafka-admin/topics").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"orders.v1","partitions":1,"replicationFactor":65535}"""))
+                .andExpect(status().isBadRequest());
+
+        verify(service, never()).createTopic(any());
+    }
+
+    @Test
     void createTopic_conflictFromKafka_returns409ProblemDetail() throws Exception {
         doThrow(new KafkaAdminOperationException(HttpStatus.CONFLICT, "Topic 'orders.v1' already exists"))
                 .when(service).createTopic(any());

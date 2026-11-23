@@ -123,6 +123,22 @@ class KafkaAdminServiceTest {
     }
 
     @Test
+    void internalTopics_cannotBeCreatedReconfiguredOrRepartitioned() {
+        // Regression (T5 verification A1/A6): only delete was guarded before.
+        assertBadRequest(() -> service.updateTopicConfigs("__consumer_offsets",
+                new UpdateTopicConfigRequest(Map.of("retention.ms", "1000"), null)));
+        assertBadRequest(() -> service.increasePartitions("__consumer_offsets", 60));
+        assertBadRequest(() -> service.createTopic(new CreateTopicRequest("__shadow", 1, 1, null)));
+
+        assertThat(service.listTopics()).noneMatch(t -> t.name().equals("__shadow"));
+    }
+
+    private static void assertBadRequest(org.assertj.core.api.ThrowableAssert.ThrowingCallable call) {
+        assertThatThrownBy(call).isInstanceOfSatisfying(KafkaAdminOperationException.class,
+                e -> assertThat(e.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
     void consumerGroup_reportsLagResetsOffsetsAndCanBeDeleted() {
         String topic = "admin.test.lag";
         String group = "admin-test-group";

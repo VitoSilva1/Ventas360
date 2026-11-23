@@ -19,6 +19,8 @@ public record CreateTopicRequest(
 
         @NotNull(message = "replicationFactor is required")
         @Min(value = 1, message = "replicationFactor must be at least 1")
+        // Upper bound keeps the value inside a short (Kafka's type); larger values would wrap to -1.
+        @Max(value = 32, message = "replicationFactor must be at most 32")
         Integer replicationFactor,
 
         // Topic-level overrides, e.g. retention.ms, cleanup.policy, min.insync.replicas.

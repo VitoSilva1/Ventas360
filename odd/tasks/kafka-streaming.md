@@ -101,3 +101,11 @@ Risk notes:
   - Kafka errors map to 400/404/409/503/502 ProblemDetails, and every call is bounded by `ventas360.kafka-admin.timeout`. Mutations are logged at INFO/WARN as an audit trail.
   - Gateway route `/kafka-admin/**`, JWT protected; the gateway test proves 401 for GET/POST/DELETE without a token. The service is not published on the host (backend network only).
   - Gotcha: `InvalidTopicException` extends `InvalidConfigurationException`, so a separate pattern-switch case does not compile (dominated label).
+- **L11 (independent verification of T5)**:
+  - S9 passes with 0 blockers. Every `/kafka-admin/**` method requires a JWT, no host port is published, and actuator only exposes health and info. Reset and delete of an active group return 409, and validation returns 400 before Kafka is called.
+  - **Fixed**: the internal-topic guard covered delete only. PATCH configs and increase-partitions on `__consumer_offsets` succeeded (cluster-wide offset loss risk), and `__*` topics could be created.
+  - **Fixed**: `replicationFactor` is now bounded (`@Max(32)`; 65535 used to wrap to -1, i.e. the broker default).
+  - **Fixed**: `UnknownMemberId`/`RebalanceInProgress` during reset map to 409 instead of 502.
+  - Regression tests added.
+  - **Open (documented limitation, A2)**: there is no role model, so any valid Google ID token can use the admin APIs. This matches the existing RabbitMQ admin precedent and the spec ("filtros que validen el JWT").
+  - **Open (A3)**: gateway CORS does not allow PATCH; no browser client uses it yet.

@@ -27,6 +27,8 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.errors.GroupIdNotFoundException;
 import org.apache.kafka.common.errors.GroupNotEmptyException;
+import org.apache.kafka.common.errors.RebalanceInProgressException;
+import org.apache.kafka.common.errors.UnknownMemberIdException;
 import org.apache.kafka.common.errors.InvalidConfigurationException;
 import org.apache.kafka.common.errors.InvalidPartitionsException;
 import org.apache.kafka.common.errors.InvalidReplicationFactorException;
@@ -110,6 +112,7 @@ public class KafkaAdminService {
     }
 
     public void createTopic(CreateTopicRequest request) {
+        requireNotInternal(request.name(), "created");
         NewTopic topic = new NewTopic(request.name(), request.partitions(), request.replicationFactor().shortValue());
         if (request.configs() != null && !request.configs().isEmpty()) {
             topic.configs(request.configs());
@@ -120,6 +123,7 @@ public class KafkaAdminService {
     }
 
     public void updateTopicConfigs(String name, UpdateTopicConfigRequest request) {
+        requireNotInternal(name, "reconfigured");
         List<AlterConfigOp> ops = new ArrayList<>();
         if (request.set() != null) {
             request.set().forEach((key, value) ->
@@ -135,18 +139,28 @@ public class KafkaAdminService {
     }
 
     public void increasePartitions(String name, int totalCount) {
+        // Repartitioning __consumer_offsets would move every group's offsets to other partitions.
+        requireNotInternal(name, "repartitioned");
         await(admin.createPartitions(Map.of(name, NewPartitions.increaseTo(totalCount))).all(),
                 "increase partitions of topic " + name);
         log.info("Kafka topic partitions increased name={} totalCount={}", name, totalCount);
     }
 
     public void deleteTopic(String name) {
-        if (name.startsWith("__")) {
-            throw new KafkaAdminOperationException(HttpStatus.BAD_REQUEST,
-                    "Internal topic '" + name + "' cannot be deleted");
-        }
+        requireNotInternal(name, "deleted");
         await(admin.deleteTopics(List.of(name)).all(), "delete topic " + name);
         log.warn("Kafka topic deleted name={}", name);
+    }
+
+    /**
+     * Topics starting with "__" belong to Kafka itself (__consumer_offsets, __transaction_state):
+     * this API never creates, reconfigures, repartitions or deletes them.
+     */
+    private static void requireNotInternal(String name, String action) {
+        if (name.startsWith("__")) {
+            throw new KafkaAdminOperationException(HttpStatus.BAD_REQUEST,
+                    "Internal topic '" + name + "' cannot be " + action);
+        }
     }
 
     // ---------------------------------------------------------------- consumer groups
@@ -276,6 +290,9 @@ public class KafkaAdminService {
         HttpStatus status = switch (cause) {
             case TopicExistsException ignored -> HttpStatus.CONFLICT;
             case GroupNotEmptyException ignored -> HttpStatus.CONFLICT;
+            // A consumer joined between the "group is inactive" check and the offset change.
+            case UnknownMemberIdException ignored -> HttpStatus.CONFLICT;
+            case RebalanceInProgressException ignored -> HttpStatus.CONFLICT;
             case UnknownTopicOrPartitionException ignored -> HttpStatus.NOT_FOUND;
             case GroupIdNotFoundException ignored -> HttpStatus.NOT_FOUND;
             case InvalidPartitionsException ignored -> HttpStatus.BAD_REQUEST;
