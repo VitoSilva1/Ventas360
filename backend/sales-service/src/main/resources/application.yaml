@@ -1,6 +1,9 @@
 logging:
   structured:
-    format: ecs
+    # ECS JSON on the console (Spring Boot property: logging.structured.format.console).
+    # MDC entries become searchable fields of every log event.
+    format:
+      console: ecs
 
 spring:
   application:

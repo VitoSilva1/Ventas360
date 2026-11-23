@@ -35,7 +35,7 @@ Requirements quoted verbatim from `EP5_DSY1107_Estudiante_encargo.pdf`:
 | T3 | S5, S6, S8, S10 (analytics-service) | inline | done | see T3 commit. analytics-service 8/8 (domain + EmbeddedKafka: both topics consumed, malformed JSON and invalid payload land in .DLT without blocking later events); api-gateway 10/10 after adding /analytics/** route. RED observed: DLT tests failed first (Spring Kafka 4 default "-dlt" suffix), fixed with explicit resolver |
 | T4 | S5, S6, S8 (inventory consumer) | inline | done | see T4 commit. product-service 13/13 (InventoryServiceTest 5: decrement, idempotent, clamp at 0, unknown product skipped, UPDATED event; EmbeddedKafka: stock decremented via inventory-group, invalid payload -> .DLT); sales-service 18/18 after max.block.ms change |
 | T5 | S9 (kafka-admin) | inline | done | see T5 commit. kafka-admin 15/15 (EmbeddedKafka: create/list/describe/configs set+delete/increase partitions/delete incl. internal+missing protection; consumer group lag, reset offsets, delete; MockMvc: 201/400/409/204). api-gateway 11/11 incl. new test: /analytics/** and /kafka-admin/** (GET, POST, DELETE) return 401 without token |
-| T6 | S10 (ECS logging across Kafka services) | inline | todo | |
+| T6 | S10 (ECS logging across Kafka services) | inline | done (runtime ECS output pending e2e) | see T6 commit. KafkaMdcRecordInterceptor tests 2/2 in analytics and product; analytics 10/10, product 17/17 |
 | T7 | S11 | inline | todo | |
 | T8 | S12 | inline | todo | |
 
@@ -109,3 +109,8 @@ Risk notes:
   - Regression tests added.
   - **Open (documented limitation, A2)**: there is no role model, so any valid Google ID token can use the admin APIs. This matches the existing RabbitMQ admin precedent and the spec ("filtros que validen el JWT").
   - **Open (A3)**: gateway CORS does not allow PATCH; no browser client uses it yet.
+- **L12 (T6 decisions)**:
+  - `logging.structured.format.console: ecs` in sales, product, analytics and kafka-admin.
+  - sales-service had `logging.structured.format: ecs`, which is not the Spring Boot property name. Whether it produced JSON before is unverified; it will be checked in the e2e run.
+  - A `KafkaMdcRecordInterceptor` (a `RecordInterceptor` bean, auto-wired by Boot into the listener container factory) puts `kafka.topic`, `kafka.partition`, `kafka.offset` and `kafka.key` into the MDC for every consumed record and removes only those keys in `afterRecord`.
+  - Test yamls shadow the main yamls, so test output stays plain text.

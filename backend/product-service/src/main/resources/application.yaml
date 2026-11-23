@@ -1,3 +1,10 @@
+logging:
+  structured:
+    # ECS JSON on the console: MDC entries (kafka.topic, kafka.partition, kafka.offset, kafka.key)
+    # become searchable fields of every log event.
+    format:
+      console: ecs
+
 spring:
   application:
     name: product-service
