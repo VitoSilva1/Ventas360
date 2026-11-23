@@ -33,7 +33,7 @@ Requirements quoted verbatim from `EP5_DSY1107_Estudiante_encargo.pdf`:
 | T1 | S1, S7 | inline | done | fdc35f6. Verified: compose config OK; 3 brokers + ZK healthy; 4 topics with RF3 and expected configs; Kafka-UI online (3 brokers, 12 partitions). RDD: high, consent declined by user |
 | T2 | S2, S3, S4, S10 (producers) | inline | done | see T2 commit. sales-service 18/18, product-service 6/6 (incl. EmbeddedKafka round-trip). RED not observed separately: tests and code compiled in the same first run |
 | T3 | S5, S6, S8, S10 (analytics-service) | inline | done | see T3 commit. analytics-service 8/8 (domain + EmbeddedKafka: both topics consumed, malformed JSON and invalid payload land in .DLT without blocking later events); api-gateway 10/10 after adding /analytics/** route. RED observed: DLT tests failed first (Spring Kafka 4 default "-dlt" suffix), fixed with explicit resolver |
-| T4 | S5, S6, S8 (inventory consumer) | inline | todo | |
+| T4 | S5, S6, S8 (inventory consumer) | inline | done | see T4 commit. product-service 13/13 (InventoryServiceTest 5: decrement, idempotent, clamp at 0, unknown product skipped, UPDATED event; EmbeddedKafka: stock decremented via inventory-group, invalid payload -> .DLT); sales-service 18/18 after max.block.ms change |
 | T5 | S9 (kafka-admin) | inline | todo | |
 | T6 | S10 (ECS logging across Kafka services) | inline | todo | |
 | T7 | S11 | inline | todo | |
@@ -78,3 +78,11 @@ Risk notes:
   - Error handling: `DefaultErrorHandler` with exponential backoff (0.5s x2, 3 attempts) and retry logs. `InvalidEventException` and `DeserializationException` are not retried. The recoverer logs the error and publishes to `<topic>.DLT` on the same partition, using a `DelegatingByTypeSerializer` (`byte[]` or JSON).
   - **Gotcha**: Spring Kafka 4's `DeadLetterPublishingRecoverer` defaults to the `-dlt` suffix, so an explicit resolver is required (saved to Engram).
   - Gateway route `/analytics/**` → `lb://analytics-service` (JWT protected like the rest). Compose service `analytics-service` was added.
+- **L8 (T4 decisions)**:
+  - product-service consumes `ventas360.sales.completed` in `inventory-group` (concurrency 3). With `analytics-group` reading the same topic, each group receives every event.
+  - Stock is decremented with an atomic JPQL `UPDATE ... CASE` (clamped at 0), so concurrent sales from different partitions cannot lose updates.
+  - Idempotency: the `inventory_processed_sales` row (PK saleId) is written in the same transaction as the decrements.
+  - Each decrement raises `ProductChangedEvent` UPDATED, which the AFTER_COMMIT relay sends to Kafka, so analytics sees low stock.
+  - Error handling mirrors analytics (`.DLT` resolver). The DLT producer is private to the config so it does not replace the auto-configured `KafkaTemplate` used by the relay.
+  - Resilience fix to T2 producers: `max.block.ms=5000` (the default of 60s would block HTTP or RabbitMQ threads while Kafka is down).
+  - The test yaml disables listener auto-startup; listener tests re-enable it with an embedded broker.

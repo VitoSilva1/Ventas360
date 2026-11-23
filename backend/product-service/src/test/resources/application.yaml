@@ -1,6 +1,10 @@
 spring:
   config:
     import: classpath:kafka.yaml
+  kafka:
+    listener:
+      # No broker in most tests; listener tests turn this back on with an embedded broker.
+      auto-startup: false
   sql:
     init:
       mode: never

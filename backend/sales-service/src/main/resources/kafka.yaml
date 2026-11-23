@@ -18,6 +18,9 @@ spring:
         linger.ms: 5
         request.timeout.ms: 15000
         delivery.timeout.ms: 30000
+        # send() blocks the caller while fetching metadata; keep it short so a Kafka outage
+        # never hangs a request or a RabbitMQ listener thread for the default 60 seconds.
+        max.block.ms: 5000
         # Plain JSON without Java type headers: consumers in other services map it to their own DTOs.
         spring.json.add.type.headers: false
 
