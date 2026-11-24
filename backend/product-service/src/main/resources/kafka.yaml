@@ -1,0 +1,55 @@
+# Kafka client configuration for product-service:
+# - producer of ventas360.product.events
+# - consumer of ventas360.sales.completed in the inventory consumer group
+# Imported by application.yaml (main and test) so both use the same settings.
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092,localhost:9093,localhost:9094}
+    client-id: product-service
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      # Wait for every in-sync replica (min.insync.replicas=2 on the topic) before confirming.
+      acks: all
+      compression-type: lz4
+      batch-size: 16384
+      properties:
+        # Idempotent producer: the broker drops duplicates of retried sends and keeps order per partition.
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        linger.ms: 5
+        request.timeout.ms: 15000
+        delivery.timeout.ms: 30000
+        # send() blocks the caller while fetching metadata; keep it short so a Kafka outage
+        # never hangs an HTTP request for the default 60 seconds.
+        max.block.ms: 5000
+        # Plain JSON without Java type headers: consumers in other services map it to their own DTOs.
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: ${ventas360.kafka.consumer-group}
+      auto-offset-reset: earliest
+      # Offsets are committed by the listener container after each record is processed.
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # Wraps the JSON deserializer: a malformed payload becomes an error routed to the DLT
+      # instead of an exception that would make the consumer loop on the same offset forever.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      max-poll-records: 100
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: com.example.product_service.dto
+        # Cooperative rebalancing: adding an instance moves partitions without stopping the others.
+        partition.assignment.strategy: org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+        session.timeout.ms: 15000
+        heartbeat.interval.ms: 3000
+        max.poll.interval.ms: 300000
+    listener:
+      ack-mode: record
+
+ventas360:
+  kafka:
+    consumer-group: inventory-group
+    topics:
+      product-events: ventas360.product.events
+      sales-completed: ventas360.sales.completed

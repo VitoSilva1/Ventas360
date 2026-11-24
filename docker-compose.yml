@@ -4,6 +4,8 @@ x-backend-environment: &backend-environment
   SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/Ventas360
   EUREKA_URL: http://service-registry:8761/eureka/
   EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+  # Brokers defined in docker-compose.kafka.yml (same "backend" network).
+  KAFKA_BOOTSTRAP_SERVERS: kafka-1:29092,kafka-2:29092,kafka-3:29092
 
 services:
   postgres:
@@ -123,6 +125,56 @@ services:
       - backend
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health | grep -q UP"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      args:
+        SERVICE_DIR: analytics-service
+    container_name: ventas360-analytics-service
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      SERVER_PORT: 8085
+      EUREKA_INSTANCE_HOSTNAME: analytics-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health | grep -q UP"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  kafka-admin:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      args:
+        SERVICE_DIR: kafka-admin
+    container_name: ventas360-kafka-admin
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8086
+      EUREKA_URL: http://service-registry:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: kafka-admin
+      KAFKA_BOOTSTRAP_SERVERS: kafka-1:29092,kafka-2:29092,kafka-3:29092
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health | grep -q UP"]
       interval: 5s
       timeout: 5s
       retries: 30

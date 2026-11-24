@@ -7,10 +7,15 @@ import { Topbar } from '../../layout/topbar';
 import { Product, ProductService } from '../../services/product.service';
 import { Sale, SaleEventItemRequest, SaleItemRequest, SaleService } from '../../services/sale.service';
 import { AuthService } from '../../services/auth.service';
+import { AnalyticsService, AnalyticsSummary } from '../../services/analytics.service';
+import { AnalyticsPanel } from '../../components/analytics-panel/analytics-panel';
+
+/** Kafka is asynchronous: give analytics-service a moment to consume a new sale before re-reading. */
+const ANALYTICS_REFRESH_DELAY_MS = 1500;
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CurrencyPipe, DatePipe, FormsModule, RouterLink, Sidebar, Topbar],
+  imports: [AnalyticsPanel, CurrencyPipe, DatePipe, FormsModule, RouterLink, Sidebar, Topbar],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -18,6 +23,11 @@ export class Dashboard implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly saleService = inject(SaleService);
   private readonly authService = inject(AuthService);
+  private readonly analyticsService = inject(AnalyticsService);
+
+  protected readonly analytics = signal<AnalyticsSummary | null>(null);
+  protected readonly analyticsLoading = signal(false);
+  protected readonly analyticsError = signal('');
 
   protected readonly products = signal<Product[]>([]);
   protected readonly sales = signal<Sale[]>([]);
@@ -45,6 +55,22 @@ export class Dashboard implements OnInit {
     this.saleService.findAll().subscribe({
       next: (s) => this.sales.set(s),
       error: () => this.salesError.set('Error cargando ventas desde sales-service.'),
+    });
+    this.loadAnalytics();
+  }
+
+  protected loadAnalytics(): void {
+    this.analyticsLoading.set(true);
+    this.analyticsService.summary().subscribe({
+      next: (summary) => {
+        this.analytics.set(summary);
+        this.analyticsError.set('');
+        this.analyticsLoading.set(false);
+      },
+      error: () => {
+        this.analyticsError.set('Error cargando analitica desde analytics-service.');
+        this.analyticsLoading.set(false);
+      },
     });
   }
 
@@ -119,6 +145,7 @@ export class Dashboard implements OnInit {
         this.saleMessage = `Venta registrada. Evento: ${res.eventId}`;
         this.activeAction.set('');
         this.saleService.findAll().subscribe({ next: (s) => this.sales.set(s) });
+        setTimeout(() => this.loadAnalytics(), ANALYTICS_REFRESH_DELAY_MS);
       },
       error: () => { this.saleError = 'Error al registrar la venta. Intenta de nuevo.'; this.activeAction.set(''); },
     });

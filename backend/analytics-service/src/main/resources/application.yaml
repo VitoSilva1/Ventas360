@@ -1,0 +1,41 @@
+logging:
+  structured:
+    # ECS JSON on the console: MDC entries (kafka.topic, kafka.partition, kafka.offset, kafka.key)
+    # become searchable fields of every log event.
+    format:
+      console: ecs
+
+spring:
+  application:
+    name: analytics-service
+  config:
+    # Kafka client settings live in kafka.yaml so tests load the exact same configuration.
+    import: classpath:kafka.yaml
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/Ventas360}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+server:
+  port: ${SERVER_PORT:8085}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+ventas360:
+  analytics:
+    low-stock-threshold: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

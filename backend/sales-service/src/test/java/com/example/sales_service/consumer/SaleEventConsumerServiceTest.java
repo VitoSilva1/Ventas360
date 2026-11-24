@@ -2,10 +2,12 @@ package com.example.sales_service.consumer;
 
 import com.example.sales_service.dto.SaleEventDto;
 import com.example.sales_service.dto.SaleEventItemDto;
+import com.example.sales_service.messaging.kafka.SaleCompletedPublisher;
 import com.example.sales_service.repository.SaleRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -23,6 +25,10 @@ class SaleEventConsumerServiceTest {
 
     @Autowired
     private SaleRepository saleRepository;
+
+    // No broker in this test: the Kafka side is covered by SaleCompletedPublisherTest.
+    @MockitoBean
+    private SaleCompletedPublisher saleCompletedPublisher;
 
     @Test
     void consumeEvent_createsPersistedSaleWithStatusCreated() {

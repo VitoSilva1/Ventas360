@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SaleService {
@@ -30,6 +31,11 @@ public class SaleService {
     @Transactional(readOnly = true)
     public SaleResponse findById(Long id) {
         return SaleResponse.from(getSale(id));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<SaleResponse> findBySaleEventId(String saleEventId) {
+        return saleRepository.findBySaleEventId(saleEventId).map(SaleResponse::from);
     }
 
     @Transactional

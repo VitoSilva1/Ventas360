@@ -1,9 +1,12 @@
 package com.example.product_service.service;
 
+import com.example.product_service.dto.ProductChangedEvent;
+import com.example.product_service.dto.ProductChangedEvent.ChangeType;
 import com.example.product_service.model.Product;
 import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.dto.ProductRequest;
 import com.example.product_service.dto.ProductResponse;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,9 +18,11 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, ApplicationEventPublisher eventPublisher) {
         this.productRepository = productRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -41,7 +46,9 @@ public class ProductService {
                 request.stock(),
                 request.active() == null || request.active()
         );
-        return ProductResponse.from(productRepository.save(product));
+        Product saved = productRepository.save(product);
+        eventPublisher.publishEvent(ProductChangedEvent.of(ChangeType.CREATED, saved));
+        return ProductResponse.from(saved);
     }
 
     @Transactional
@@ -54,13 +61,16 @@ public class ProductService {
         if (request.active() != null) {
             product.setActive(request.active());
         }
-        return ProductResponse.from(productRepository.save(product));
+        Product saved = productRepository.save(product);
+        eventPublisher.publishEvent(ProductChangedEvent.of(ChangeType.UPDATED, saved));
+        return ProductResponse.from(saved);
     }
 
     @Transactional
     public void delete(Long id) {
         Product product = getProduct(id);
         productRepository.delete(product);
+        eventPublisher.publishEvent(ProductChangedEvent.of(ChangeType.DELETED, product));
     }
 
     private Product getProduct(Long id) {

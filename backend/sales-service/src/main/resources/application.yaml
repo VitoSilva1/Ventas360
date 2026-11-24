@@ -1,6 +1,9 @@
 logging:
   structured:
-    format: ecs
+    # ECS JSON on the console (Spring Boot property: logging.structured.format.console).
+    # MDC entries become searchable fields of every log event.
+    format:
+      console: ecs
 
 spring:
   application:
@@ -10,6 +13,9 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+  config:
+    # Kafka client settings live in kafka.yaml so tests load the exact same configuration.
+    import: classpath:kafka.yaml
   datasource:
     url: jdbc:postgresql://localhost:5432/Ventas360
     username: ${DB_USERNAME:postgres}
