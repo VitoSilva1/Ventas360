@@ -85,7 +85,7 @@ backend/
 └── service-registry/
 
 docker/kafka/create-topics.sh   # creación idempotente de tópicos
-docker-compose.kafka.yml        # Zookeeper, 3 brokers, Kafka-UI
+docker-compose.kafka.yml        # 3 Zookeeper, 3 brokers, Kafka-UI
 
 frontend/
 └── Angular
@@ -111,7 +111,12 @@ product-service ──ProductChangedEvent──► [ventas360.product.events]   
 
 ### Infraestructura (`docker-compose.kafka.yml`)
 
-- 1 Zookeeper y 3 brokers (imágenes Confluent 7.7, Kafka 3.7). Kafka 4.x ya no soporta Zookeeper.
+- Ensemble de 3 nodos Zookeeper y 3 brokers (imágenes Confluent 7.7, Kafka 3.7). Kafka 4.x ya no
+  soporta Zookeeper. El ensemble necesita quórum (2 de 3 nodos): tolera la caída de un nodo, igual
+  que los brokers con factor de replicación 3 y `min.insync.replicas=2`.
+- Si ya tenías levantada la versión anterior (1 Zookeeper), borra los volúmenes de Kafka antes de
+  volver a levantarla: `docker compose -f docker-compose.kafka.yml down -v`. Los brokers guardan el
+  `cluster.id` del Zookeeper anterior y no arrancan contra el ensemble nuevo.
 - Cada broker tiene un listener interno `kafka-N:29092` (red Docker) y uno externo `localhost:909N`.
 - Valores por defecto del clúster: factor de replicación 3, `min.insync.replicas=2` y creación
   automática de tópicos desactivada.
